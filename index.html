@@ -143,27 +143,4 @@
 </script>
 
 
-  <script>
-    po('customers',
-      'signup', {
-        data: {
-            key: 'customer_123456', // or email address
-            name: 'John',
-            email: 'john.doe@partnero.com'
-        }
-      }
-    );
-</script>
-  <script>
-    po('transactions', 'create', {
-        data: {
-            key: 'transaction_123',
-            amount: 99.99,
-            amount_units: 'usd',
-            customer: {
-                key: 'customer_123456'
-            }
-        }
-    });
-</script>
 </html>
