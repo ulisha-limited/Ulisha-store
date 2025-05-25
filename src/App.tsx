@@ -8,8 +8,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Outlet } from 'react-router-dom';
 
 const HomeLazy = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
-const LoginLazy = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
-const RegisterLazy = lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
+const LoginLazy = lazy(() => import('./pages/auth/Login').then(module => ({ default: module.Login })));
+const RegisterLazy = lazy(() => import('./pages/auth/Register').then(module => ({ default: module.Register })));
 const AboutLazy = lazy(() => import('./pages/About').then(module => ({ default: module.About })));
 const TermsLazy = lazy(() => import('./pages/Terms').then(module => ({ default: module.Terms })));
 const ReturnsLazy = lazy(() => import('./pages/Returns').then(module => ({ default: module.Returns })));

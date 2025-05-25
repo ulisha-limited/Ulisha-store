@@ -19,7 +19,7 @@ export function Terms() {
                 Welcome to Ulisha Store. These terms and conditions outline the rules and regulations for the use of our website and services.
               </p>
               <p className="text-gray-600">
-                By accessing this website, we assume you accept these terms and conditions in full. Do not continue to use Ulisha Store's website if you do not accept all of the terms and conditions stated on this page.
+                By accessing this website, we assume you accept these terms and conditions in full. Do not continue to use Ulisha Stores website if you do not accept all of the terms and conditions stated on this page.
               </p>
             </section>
 

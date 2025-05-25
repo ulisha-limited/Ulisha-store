@@ -2,27 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Copy, Check } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-
-interface AffiliateAccount {
-  id: string;
-  referral_code: string;
-  earnings: number;
-  paid_earnings: number;
-  status: string;
-  created_at: string;
-  referral_count: number;
-}
-
-interface AffiliateReferral {
-  id: string;
-  referred_user: {
-    email: string;
-    user_metadata: {
-      full_name: string;
-    };
-  };
-  created_at: string;
-}
+import { AffiliateAccount, AffiliateReferral } from '../types';
 
 export function Affiliate() {
   const [loading, setLoading] = useState(true);
