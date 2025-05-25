@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShoppingBag, Truck, Shield, CreditCard, Users, Phone, Mail, MapPin } from 'lucide-react';
+import React from 'react'
+import { ShoppingBag, Truck, Shield, CreditCard, Users, Phone, Mail, MapPin } from 'lucide-react'
 
 export function About() {
   return (
@@ -9,7 +9,9 @@ export function About() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">About Ulisha Store</h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Your premier destination for quality fashion, accessories, and electronics. We bring you the best products at competitive prices, with both fiat and cryptocurrency payment options.
+            Your premier destination for quality fashion, accessories, and electronics. We bring you
+            the best products at competitive prices, with both fiat and cryptocurrency payment
+            options.
           </p>
         </div>
 
@@ -19,13 +21,17 @@ export function About() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
               <p className="text-gray-600">
-                To provide our customers with high-quality, affordable products while ensuring a seamless shopping experience. We strive to make online shopping accessible to everyone by offering multiple payment options and excellent customer service.
+                To provide our customers with high-quality, affordable products while ensuring a
+                seamless shopping experience. We strive to make online shopping accessible to
+                everyone by offering multiple payment options and excellent customer service.
               </p>
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h2>
               <p className="text-gray-600">
-                To become Nigeria's most trusted e-commerce platform, known for our quality products, reliable service, and innovative payment solutions. We aim to revolutionize the online shopping experience in Africa.
+                To become Nigeria's most trusted e-commerce platform, known for our quality
+                products, reliable service, and innovative payment solutions. We aim to
+                revolutionize the online shopping experience in Africa.
               </p>
             </div>
           </div>
@@ -39,7 +45,8 @@ export function About() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Secure Shopping</h3>
             <p className="text-gray-600">
-              Your security is our priority. We use industry-standard encryption to protect your personal and payment information.
+              Your security is our priority. We use industry-standard encryption to protect your
+              personal and payment information.
             </p>
           </div>
 
@@ -49,7 +56,8 @@ export function About() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Multiple Payment Options</h3>
             <p className="text-gray-600">
-              Choose from various payment methods including credit cards, bank transfers, and cryptocurrencies.
+              Choose from various payment methods including credit cards, bank transfers, and
+              cryptocurrencies.
             </p>
           </div>
 
@@ -59,21 +67,26 @@ export function About() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Fast Delivery</h3>
             <p className="text-gray-600">
-              We partner with reliable logistics companies to ensure your orders reach you quickly and safely.
+              We partner with reliable logistics companies to ensure your orders reach you quickly
+              and safely.
             </p>
           </div>
         </div>
 
         {/* Why Choose Us */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Why Choose Ulisha Store?</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Why Choose Ulisha Store?
+          </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="bg-primary-orange/10 rounded-full p-4 inline-block mb-4">
                 <ShoppingBag className="h-6 w-6 text-primary-orange" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Quality Products</h3>
-              <p className="text-sm text-gray-600">Carefully curated selection of high-quality items</p>
+              <p className="text-sm text-gray-600">
+                Carefully curated selection of high-quality items
+              </p>
             </div>
 
             <div className="text-center">
@@ -133,5 +146,5 @@ export function About() {
         </div>
       </div>
     </div>
-  );
+  )
 }

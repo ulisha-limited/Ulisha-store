@@ -1,48 +1,48 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ShoppingBag } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter';
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Mail, Lock, User, ShoppingBag } from 'lucide-react'
+import { useAuthStore } from '../../store/authStore'
+import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter'
 
 export function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  
-  const navigate = useNavigate();
-  const signUp = useAuthStore((state) => state.signUp);
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState(0)
+
+  const navigate = useNavigate()
+  const signUp = useAuthStore((state) => state.signUp)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+      setError('Passwords do not match')
+      return
     }
 
     // Check password strength
     if (passwordStrength < 3) {
-      setError('Please choose a stronger password');
-      return;
+      setError('Please choose a stronger password')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-      await signUp(email, password, name);
-      navigate('/dashboard');
+      await signUp(email, password, name)
+      navigate('/dashboard')
     } catch (err: any) {
-      setError(err.message || 'An error occurred during registration');
+      setError(err.message || 'An error occurred during registration')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -66,7 +66,7 @@ export function Register() {
               {error}
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -117,10 +117,7 @@ export function Register() {
                 />
                 <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <PasswordStrengthMeter 
-                password={password} 
-                onStrengthChange={setPasswordStrength}
-              />
+              <PasswordStrengthMeter password={password} onStrengthChange={setPasswordStrength} />
             </div>
 
             <div>
@@ -133,8 +130,8 @@ export function Register() {
                   type="password"
                   required
                   className={`pl-10 block w-full rounded-md border ${
-                    confirmPassword && password !== confirmPassword 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    confirmPassword && password !== confirmPassword
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                       : 'border-gray-300 focus:border-primary-orange focus:ring-primary-orange'
                   } px-3 py-2 shadow-sm`}
                   value={confirmPassword}
@@ -156,7 +153,14 @@ export function Register() {
                 className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 rounded"
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the <a href="#" className="text-primary-orange hover:text-primary-orange/90">Terms of Service</a> and <a href="#" className="text-primary-orange hover:text-primary-orange/90">Privacy Policy</a>
+                I agree to the{' '}
+                <a href="#" className="text-primary-orange hover:text-primary-orange/90">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="#" className="text-primary-orange hover:text-primary-orange/90">
+                  Privacy Policy
+                </a>
               </label>
             </div>
 
@@ -187,5 +191,5 @@ export function Register() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,30 +1,41 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
-import { useNavigate } from 'react-router-dom';
-import { Loader, Upload, Trash2, Edit, AlertTriangle, Check, X, Package, Plus, Image } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import type { Product } from '../types';
+import React, { useState, useEffect, useRef } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
+import { useNavigate } from 'react-router-dom'
+import {
+  Loader,
+  Upload,
+  Trash2,
+  Edit,
+  AlertTriangle,
+  Check,
+  X,
+  Package,
+  Plus,
+  Image,
+} from 'lucide-react'
+import { v4 as uuidv4 } from 'uuid'
+import type { Product } from '../types'
 
-const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com'];
+const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com']
 
 export function Admin() {
-  const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [showProductForm, setShowProductForm] = useState(false);
-  const [showAdForm, setShowAdForm] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  
-  const user = useAuthStore((state) => state.user);
-  const navigate = useNavigate();
-  
-  const productImageRef = useRef<HTMLInputElement>(null);
-  const additionalImagesRef = useRef<HTMLInputElement>(null);
-  const adImageRef = useRef<HTMLInputElement>(null);
-  
+  const [loading, setLoading] = useState(true)
+  const [products, setProducts] = useState<Product[]>([])
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [showAdForm, setShowAdForm] = useState(false)
+  const [formLoading, setFormLoading] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+  const user = useAuthStore((state) => state.user)
+  const navigate = useNavigate()
+
+  const productImageRef = useRef<HTMLInputElement>(null)
+  const additionalImagesRef = useRef<HTMLInputElement>(null)
+  const adImageRef = useRef<HTMLInputElement>(null)
+
   const [productData, setProductData] = useState({
     name: '',
     price: '',
@@ -35,8 +46,8 @@ export function Admin() {
     original_price: '',
     discount_price: '',
     discount_active: false,
-    shipping_location: 'Nigeria'
-  });
+    shipping_location: 'Nigeria',
+  })
 
   const [adData, setAdData] = useState({
     title: '',
@@ -44,50 +55,50 @@ export function Admin() {
     image: null as File | null,
     button_text: '',
     button_link: '',
-    active: true
-  });
+    active: true,
+  })
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
-      return;
+      navigate('/login')
+      return
     }
-    
+
     if (!ADMIN_EMAILS.includes(user.email || '')) {
-      navigate('/');
-      return;
+      navigate('/')
+      return
     }
-    
-    fetchProducts();
-  }, [user, navigate]);
+
+    fetchProducts()
+  }, [user, navigate])
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setProducts(data || []);
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setProducts(data || [])
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching products:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     if (!productData.image && !editingProduct) {
-      alert('Please select a product image');
-      return;
+      alert('Please select a product image')
+      return
     }
-    
+
     try {
-      setFormLoading(true);
+      setFormLoading(true)
 
       const productToSave = {
         name: productData.name,
@@ -96,108 +107,110 @@ export function Admin() {
         original_price: parseFloat(productData.original_price),
         discount_price: productData.discount_active ? parseFloat(productData.discount_price) : null,
         discount_active: productData.discount_active,
-        shipping_location: productData.shipping_location
-      };
+        shipping_location: productData.shipping_location,
+      }
 
       if (editingProduct) {
-        const updates: any = { ...productToSave };
-        
+        const updates: any = { ...productToSave }
+
         if (productData.image) {
-          const imageName = `${uuidv4()}-${productData.image.name}`;
+          const imageName = `${uuidv4()}-${productData.image.name}`
           const { error: uploadError } = await supabase.storage
             .from('product-images')
-            .upload(imageName, productData.image);
-          
-          if (uploadError) throw uploadError;
-          
-          const { data: { publicUrl: imageUrl } } = supabase.storage
-            .from('product-images')
-            .getPublicUrl(imageName);
-          
-          updates.image = imageUrl;
+            .upload(imageName, productData.image)
+
+          if (uploadError) throw uploadError
+
+          const {
+            data: { publicUrl: imageUrl },
+          } = supabase.storage.from('product-images').getPublicUrl(imageName)
+
+          updates.image = imageUrl
         }
 
         const { error: updateError } = await supabase
           .from('products')
           .update(updates)
-          .eq('id', editingProduct.id);
+          .eq('id', editingProduct.id)
 
-        if (updateError) throw updateError;
+        if (updateError) throw updateError
 
         if (productData.additionalImages.length > 0) {
           const additionalImagePromises = productData.additionalImages.map(async (file) => {
-            const fileName = `${uuidv4()}-${file.name}`;
+            const fileName = `${uuidv4()}-${file.name}`
             const { error: additionalUploadError } = await supabase.storage
               .from('product-images')
-              .upload(fileName, file);
-            
-            if (additionalUploadError) throw additionalUploadError;
-            
-            const { data: { publicUrl: additionalImageUrl } } = supabase.storage
-              .from('product-images')
-              .getPublicUrl(fileName);
-            
-            return { product_id: editingProduct.id, image_url: additionalImageUrl };
-          });
-          
-          const additionalImageData = await Promise.all(additionalImagePromises);
-          
+              .upload(fileName, file)
+
+            if (additionalUploadError) throw additionalUploadError
+
+            const {
+              data: { publicUrl: additionalImageUrl },
+            } = supabase.storage.from('product-images').getPublicUrl(fileName)
+
+            return { product_id: editingProduct.id, image_url: additionalImageUrl }
+          })
+
+          const additionalImageData = await Promise.all(additionalImagePromises)
+
           const { error: additionalImagesError } = await supabase
             .from('product_images')
-            .insert(additionalImageData);
-          
-          if (additionalImagesError) throw additionalImagesError;
+            .insert(additionalImageData)
+
+          if (additionalImagesError) throw additionalImagesError
         }
       } else {
         if (!productData.image) {
-          throw new Error('Product image is required');
+          throw new Error('Product image is required')
         }
 
-        const imageName = `${uuidv4()}-${productData.image.name}`;
+        const imageName = `${uuidv4()}-${productData.image.name}`
         const { error: uploadError } = await supabase.storage
           .from('product-images')
-          .upload(imageName, productData.image);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl: imageUrl } } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(imageName);
+          .upload(imageName, productData.image)
+
+        if (uploadError) throw uploadError
+
+        const {
+          data: { publicUrl: imageUrl },
+        } = supabase.storage.from('product-images').getPublicUrl(imageName)
 
         const { data: newProduct, error: insertError } = await supabase
           .from('products')
-          .insert([{
-            ...productToSave,
-            image: imageUrl
-          }])
+          .insert([
+            {
+              ...productToSave,
+              image: imageUrl,
+            },
+          ])
           .select()
-          .single();
+          .single()
 
-        if (insertError) throw insertError;
+        if (insertError) throw insertError
 
         if (productData.additionalImages.length > 0) {
           const additionalImagePromises = productData.additionalImages.map(async (file) => {
-            const fileName = `${uuidv4()}-${file.name}`;
+            const fileName = `${uuidv4()}-${file.name}`
             const { error: additionalUploadError } = await supabase.storage
               .from('product-images')
-              .upload(fileName, file);
-            
-            if (additionalUploadError) throw additionalUploadError;
-            
-            const { data: { publicUrl: additionalImageUrl } } = supabase.storage
-              .from('product-images')
-              .getPublicUrl(fileName);
-            
-            return { product_id: newProduct.id, image_url: additionalImageUrl };
-          });
-          
-          const additionalImageData = await Promise.all(additionalImagePromises);
-          
+              .upload(fileName, file)
+
+            if (additionalUploadError) throw additionalUploadError
+
+            const {
+              data: { publicUrl: additionalImageUrl },
+            } = supabase.storage.from('product-images').getPublicUrl(fileName)
+
+            return { product_id: newProduct.id, image_url: additionalImageUrl }
+          })
+
+          const additionalImageData = await Promise.all(additionalImagePromises)
+
           const { error: additionalImagesError } = await supabase
             .from('product_images')
-            .insert(additionalImageData);
-          
-          if (additionalImagesError) throw additionalImagesError;
+            .insert(additionalImageData)
+
+          if (additionalImagesError) throw additionalImagesError
         }
       }
 
@@ -211,63 +224,62 @@ export function Admin() {
         original_price: '',
         discount_price: '',
         discount_active: false,
-        shipping_location: 'Nigeria'
-      });
-      
-      if (productImageRef.current) productImageRef.current.value = '';
-      if (additionalImagesRef.current) additionalImagesRef.current.value = '';
-      
-      setShowProductForm(false);
-      setEditingProduct(null);
-      fetchProducts();
-      
+        shipping_location: 'Nigeria',
+      })
+
+      if (productImageRef.current) productImageRef.current.value = ''
+      if (additionalImagesRef.current) additionalImagesRef.current.value = ''
+
+      setShowProductForm(false)
+      setEditingProduct(null)
+      fetchProducts()
+
       showNotification(
         editingProduct ? 'Product updated successfully!' : 'Product added successfully!',
-        'success'
-      );
-      
+        'success',
+      )
     } catch (error) {
-      console.error('Error saving product:', error);
-      showNotification('Error saving product. Please try again.', 'error');
+      console.error('Error saving product:', error)
+      showNotification('Error saving product. Please try again.', 'error')
     } finally {
-      setFormLoading(false);
+      setFormLoading(false)
     }
-  };
+  }
 
   const handleAdSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!adData.image) {
-      alert('Please select an advertisement image');
-      return;
-    }
-    
-    try {
-      setFormLoading(true);
+    e.preventDefault()
 
-      const imageName = `${uuidv4()}-${adData.image.name}`;
+    if (!adData.image) {
+      alert('Please select an advertisement image')
+      return
+    }
+
+    try {
+      setFormLoading(true)
+
+      const imageName = `${uuidv4()}-${adData.image.name}`
       const { error: uploadError } = await supabase.storage
         .from('advertisements')
-        .upload(imageName, adData.image);
-      
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl: imageUrl } } = supabase.storage
-        .from('advertisements')
-        .getPublicUrl(imageName);
+        .upload(imageName, adData.image)
 
-      const { error: insertError } = await supabase
-        .from('advertisements')
-        .insert([{
+      if (uploadError) throw uploadError
+
+      const {
+        data: { publicUrl: imageUrl },
+      } = supabase.storage.from('advertisements').getPublicUrl(imageName)
+
+      const { error: insertError } = await supabase.from('advertisements').insert([
+        {
           title: adData.title,
           description: adData.description,
           image_url: imageUrl,
           button_text: adData.button_text,
           button_link: adData.button_link,
-          active: adData.active
-        }]);
+          active: adData.active,
+        },
+      ])
 
-      if (insertError) throw insertError;
+      if (insertError) throw insertError
 
       setAdData({
         title: '',
@@ -275,94 +287,90 @@ export function Admin() {
         image: null,
         button_text: '',
         button_link: '',
-        active: true
-      });
-      
-      if (adImageRef.current) adImageRef.current.value = '';
-      
-      setShowAdForm(false);
-      showNotification('Advertisement added successfully!', 'success');
-      
+        active: true,
+      })
+
+      if (adImageRef.current) adImageRef.current.value = ''
+
+      setShowAdForm(false)
+      showNotification('Advertisement added successfully!', 'success')
     } catch (error) {
-      console.error('Error saving advertisement:', error);
-      showNotification('Error saving advertisement. Please try again.', 'error');
+      console.error('Error saving advertisement:', error)
+      showNotification('Error saving advertisement. Please try again.', 'error')
     } finally {
-      setFormLoading(false);
+      setFormLoading(false)
     }
-  };
+  }
 
   const handleDeleteProduct = async (productId: string) => {
     try {
-      setDeleteLoading(true);
-      
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
-      
-      if (error) throw error;
-      
-      fetchProducts();
-      setDeleteConfirmation(null);
-      showNotification('Product deleted successfully!', 'success');
+      setDeleteLoading(true)
+
+      const { error } = await supabase.from('products').delete().eq('id', productId)
+
+      if (error) throw error
+
+      fetchProducts()
+      setDeleteConfirmation(null)
+      showNotification('Product deleted successfully!', 'success')
     } catch (error) {
-      console.error('Error deleting product:', error);
-      showNotification('Error deleting product. Please try again.', 'error');
+      console.error('Error deleting product:', error)
+      showNotification('Error deleting product. Please try again.', 'error')
     } finally {
-      setDeleteLoading(false);
+      setDeleteLoading(false)
     }
-  };
+  }
 
   const handleProductImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setProductData({ ...productData, image: e.target.files[0] });
+      setProductData({ ...productData, image: e.target.files[0] })
     }
-  };
+  }
 
   const handleAdImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setAdData({ ...adData, image: e.target.files[0] });
+      setAdData({ ...adData, image: e.target.files[0] })
     }
-  };
+  }
 
   const handleAdditionalImagesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      setProductData({ 
-        ...productData, 
-        additionalImages: [...productData.additionalImages, ...newFiles] 
-      });
+      const newFiles = Array.from(e.target.files)
+      setProductData({
+        ...productData,
+        additionalImages: [...productData.additionalImages, ...newFiles],
+      })
     }
-  };
+  }
 
   const removeAdditionalImage = (index: number) => {
-    const updatedImages = [...productData.additionalImages];
-    updatedImages.splice(index, 1);
-    setProductData({ ...productData, additionalImages: updatedImages });
-  };
+    const updatedImages = [...productData.additionalImages]
+    updatedImages.splice(index, 1)
+    setProductData({ ...productData, additionalImages: updatedImages })
+  }
 
   const showNotification = (message: string, type: 'success' | 'error') => {
-    const notification = document.createElement('div');
+    const notification = document.createElement('div')
     notification.className = `fixed bottom-4 right-4 ${
       type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    } text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
+    } text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in`
+    notification.textContent = message
+    document.body.appendChild(notification)
+
     setTimeout(() => {
-      notification.classList.add('animate-fade-out');
+      notification.classList.add('animate-fade-out')
       setTimeout(() => {
-        document.body.removeChild(notification);
-      }, 300);
-    }, 3000);
-  };
+        document.body.removeChild(notification)
+      }, 300)
+    }, 3000)
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader className="w-8 h-8 animate-spin text-primary-orange" />
       </div>
-    );
+    )
   }
 
   return (
@@ -400,7 +408,7 @@ export function Admin() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <form onSubmit={handleAdSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Title</label>
@@ -412,7 +420,7 @@ export function Admin() {
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
@@ -423,7 +431,7 @@ export function Admin() {
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Image</label>
                 <input
@@ -440,7 +448,7 @@ export function Admin() {
                     hover:file:bg-primary-orange/90"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Button Text</label>
                 <input
@@ -451,7 +459,7 @@ export function Admin() {
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Button Link</label>
                 <input
@@ -462,7 +470,7 @@ export function Admin() {
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                 />
               </div>
-              
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -475,7 +483,7 @@ export function Admin() {
                   Active
                 </label>
               </div>
-              
+
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
@@ -515,15 +523,15 @@ export function Admin() {
               </h2>
               <button
                 onClick={() => {
-                  setShowProductForm(false);
-                  setEditingProduct(null);
+                  setShowProductForm(false)
+                  setEditingProduct(null)
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <form onSubmit={handleProductSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -536,16 +544,23 @@ export function Admin() {
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Original Price (NGN)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Original Price (NGN)
+                  </label>
                   <input
                     type="number"
                     required
                     min="0"
                     step="0.01"
                     value={productData.original_price}
-                    onChange={(e) => setProductData({ ...productData, original_price: e.target.value })}
+                    onChange={(e) =>
+                      setProductData({
+                        ...productData,
+                        original_price: e.target.value,
+                      })
+                    }
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                   />
                 </div>
@@ -558,7 +573,12 @@ export function Admin() {
                       type="checkbox"
                       id="discount_active"
                       checked={productData.discount_active}
-                      onChange={(e) => setProductData({ ...productData, discount_active: e.target.checked })}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          discount_active: e.target.checked,
+                        })
+                      }
                       className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 rounded"
                     />
                     <label htmlFor="discount_active" className="text-sm font-medium text-gray-700">
@@ -568,14 +588,21 @@ export function Admin() {
 
                   {productData.discount_active && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Discount Price (NGN)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Discount Price (NGN)
+                      </label>
                       <input
                         type="number"
                         required
                         min="0"
                         step="0.01"
                         value={productData.discount_price}
-                        onChange={(e) => setProductData({ ...productData, discount_price: e.target.value })}
+                        onChange={(e) =>
+                          setProductData({
+                            ...productData,
+                            discount_price: e.target.value,
+                          })
+                        }
                         className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                       />
                     </div>
@@ -587,7 +614,12 @@ export function Admin() {
                   <select
                     required
                     value={productData.category}
-                    onChange={(e) => setProductData({ ...productData, category: e.target.value })}
+                    onChange={(e) =>
+                      setProductData({
+                        ...productData,
+                        category: e.target.value,
+                      })
+                    }
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                   >
                     <option value="Clothes">Clothes</option>
@@ -600,7 +632,6 @@ export function Admin() {
                     <option value="Handbags">Handbags</option>
                     <option value="Jewelries">Jewelries</option>
                     <option value="Gym Wear">Gym Wear</option>
-                    
                   </select>
                 </div>
               </div>
@@ -610,28 +641,40 @@ export function Admin() {
                 <select
                   required
                   value={productData.shipping_location}
-                  onChange={(e) => setProductData({ ...productData, shipping_location: e.target.value })}
+                  onChange={(e) =>
+                    setProductData({
+                      ...productData,
+                      shipping_location: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                 >
                   <option value="Nigeria">Nigeria</option>
                   <option value="Abroad">Abroad</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
                   rows={4}
                   required
                   value={productData.description}
-                  onChange={(e) => setProductData({ ...productData, description: e.target.value })}
+                  onChange={(e) =>
+                    setProductData({
+                      ...productData,
+                      description: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Main Product Image</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Main Product Image
+                  </label>
                   <input
                     type="file"
                     ref={productImageRef}
@@ -645,9 +688,11 @@ export function Admin() {
                       file:hover:bg-primary-orange/90"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Additional Images</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Additional Images
+                  </label>
                   <input
                     type="file"
                     ref={additionalImagesRef}
@@ -663,7 +708,7 @@ export function Admin() {
                   />
                 </div>
               </div>
-              
+
               {/* Preview of additional images */}
               {productData.additionalImages.length > 0 && (
                 <div className="grid grid-cols-6 gap-2">
@@ -685,13 +730,13 @@ export function Admin() {
                   ))}
                 </div>
               )}
-              
+
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
                   onClick={() => {
-                    setShowProductForm(false);
-                    setEditingProduct(null);
+                    setShowProductForm(false)
+                    setEditingProduct(null)
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
@@ -724,16 +769,26 @@ export function Admin() {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Products ({products.length})</h2>
-              
+
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Product
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Location
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -742,10 +797,16 @@ export function Admin() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="h-10 w-10 flex-shrink-0">
-                              <img className="h-10 w-10 rounded-full object-cover" src={product.image} alt="" />
+                              <img
+                                className="h-10 w-10 rounded-full object-cover"
+                                src={product.image}
+                                alt=""
+                              />
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {product.name}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -758,7 +819,7 @@ export function Admin() {
                           <div className="text-sm text-gray-900">
                             {new Intl.NumberFormat('en-NG', {
                               style: 'currency',
-                              currency: 'NGN'
+                              currency: 'NGN',
                             }).format(product.price)}
                           </div>
                           {product.discount_active && product.original_price && (
@@ -766,10 +827,12 @@ export function Admin() {
                               <span className="line-through">
                                 {new Intl.NumberFormat('en-NG', {
                                   style: 'currency',
-                                  currency: 'NGN'
+                                  currency: 'NGN',
                                 }).format(product.original_price)}
                               </span>
-                              <span className="ml-1 text-green-600">-{product.discount_percentage}%</span>
+                              <span className="ml-1 text-green-600">
+                                -{product.discount_percentage}%
+                              </span>
                             </div>
                           )}
                         </td>
@@ -782,7 +845,7 @@ export function Admin() {
                           <div className="flex justify-end space-x-2">
                             <button
                               onClick={() => {
-                                setEditingProduct(product);
+                                setEditingProduct(product)
                                 setProductData({
                                   name: product.name,
                                   price: product.price.toString(),
@@ -790,12 +853,13 @@ export function Admin() {
                                   description: product.description,
                                   image: null,
                                   additionalImages: [],
-                                  original_price: product.original_price?.toString() || product.price.toString(),
+                                  original_price:
+                                    product.original_price?.toString() || product.price.toString(),
                                   discount_price: product.discount_price?.toString() || '',
                                   discount_active: product.discount_active || false,
-                                  shipping_location: product.shipping_location
-                                });
-                                setShowProductForm(true);
+                                  shipping_location: product.shipping_location,
+                                })
+                                setShowProductForm(true)
                               }}
                               className="text-blue-600 hover:text-blue-900"
                             >
@@ -810,7 +874,9 @@ export function Admin() {
                           </div>
                           {deleteConfirmation === product.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                              <div className="px-4 py-2 text-sm text-gray-700">Delete this product?</div>
+                              <div className="px-4 py-2 text-sm text-gray-700">
+                                Delete this product?
+                              </div>
                               <div className="border-t border-gray-100"></div>
                               <div className="flex justify-end px-4 py-2 space-x-2">
                                 <button
@@ -857,5 +923,5 @@ export function Admin() {
         )}
       </div>
     </div>
-  );
+  )
 }
