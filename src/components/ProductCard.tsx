@@ -110,7 +110,7 @@ export function ProductCard({ product }: { product: Product }) {
         />
         
         {/* Discount badge */}
-        {product.discount_active && product.discount_percentage > 0 && (
+        {product.discount_active && (product.discount_percentage ?? 0) > 0 && (
           <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
             -{product.discount_percentage}%
           </div>

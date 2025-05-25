@@ -1,35 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { Home } from './pages/Home';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
-import { Settings } from './pages/Settings';
-import { Admin } from './pages/Admin';
-import { Cart } from './pages/Cart';
-import { MyStore } from './pages/MyStore';
-import { StoreDetails } from './pages/StoreDetails';
-import { ProductDetails } from './pages/ProductDetails';
-import { Chat } from './pages/Chat';
-import { About } from './pages/About';
-import { Terms } from './pages/Terms';
-import { Returns } from './pages/Returns';
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 import { InstallPWA } from './components/InstallPWA';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Outlet } from 'react-router-dom';
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  return user ? <>{children}</> : <Navigate to="/login" />;
-}
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const adminEmails = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com'];
-  const isAdmin = user?.email && adminEmails.includes(user.email);
-  return isAdmin ? <>{children}</> : <Navigate to="/" />;
-}
+const HomeLazy = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
+const LoginLazy = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
+const RegisterLazy = lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
+const AboutLazy = lazy(() => import('./pages/About').then(module => ({ default: module.About })));
+const TermsLazy = lazy(() => import('./pages/Terms').then(module => ({ default: module.Terms })));
+const ReturnsLazy = lazy(() => import('./pages/Returns').then(module => ({ default: module.Returns })));
+const DashboardLazy = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
+const SettingsLazy = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
+const AdminLazy = lazy(() => import('./pages/Admin').then(module => ({ default: module.Admin })));
+const CartLazy = lazy(() => import('./pages/Cart').then(module => ({ default: module.Cart })));
+const MyStoreLazy = lazy(() => import('./pages/MyStore').then(module => ({ default: module.MyStore })));
+const StoreDetailsLazy = lazy(() => import('./pages/StoreDetails').then(module => ({ default: module.StoreDetails })));
+const ProductDetailsLazy = lazy(() => import('./pages/ProductDetails').then(module => ({ default: module.ProductDetails })));
+const ChatLazy = lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
@@ -68,70 +59,41 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar isLoggedIn={!!user} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-          <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/returns" element={<Returns />} />
-          <Route
-            path="/cart"
-            element={
-              <PrivateRoute>
-                <Cart />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <PrivateRoute>
-                <Settings />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/my-store"
-            element={
-              <PrivateRoute>
-                <MyStore />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/store/:storeId"
-            element={<StoreDetails />}
-          />
-          <Route
-            path="/product/:productId"
-            element={<ProductDetails />}
-          />
-          <Route
-            path="/chat-support"
-            element={<Chat />}
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            }
-          />
-        </Routes>
-        <InstallPWA />
-      </div>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
+        <span className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+          </div>
+        }
+            >
+        <div className="min-h-screen bg-gray-50">
+          <Navbar isLoggedIn={!!user} />
+          <Routes>
+            <Route path="/" element={<HomeLazy />} />
+            <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginLazy />} />
+            <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <RegisterLazy />} />
+            <Route path="/about" element={<AboutLazy />} />
+            <Route path="/terms" element={<TermsLazy />} />
+            <Route path="/returns" element={<ReturnsLazy />} />
+            <Route path="/store/:storeId" element={<StoreDetailsLazy />} />
+            <Route path="/product/:productId" element={<ProductDetailsLazy />} />
+            <Route path="/chat-support" element={<ChatLazy />} />
+
+            <Route element={<ProtectedRoute requiredRole="user"><Outlet /></ProtectedRoute>}>
+              <Route path="/cart" element={<CartLazy />} />
+              <Route path="/dashboard" element={<DashboardLazy />} />
+              <Route path="/settings" element={<SettingsLazy />} />
+              <Route path="/my-store" element={<MyStoreLazy />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredRole="admin"><Outlet /></ProtectedRoute>}>
+              <Route path="/admin" element={<AdminLazy />} />
+            </Route>
+          </Routes>
+          
+          <InstallPWA />
+        </div>
+      </Suspense>
     </Router>
   );
 }
