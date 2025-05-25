@@ -177,21 +177,20 @@ export function Cart() {
     }
   };
 
-  const handleFlutterwaveClose = () => {
+  const handleFlutterwaveClose = async () => {
     // If payment was cancelled, delete the pending order
+    try {
     if (orderId) {
-      supabase
+     await supabase
         .from('orders')
         .delete()
-        .eq('id', orderId)
-        .then(() => {
-          setOrderId(null);
+        .eq('id', orderId);
+        setOrderId(null);
           console.log('Pending order deleted');
-        })
-        .catch(error => {
-          console.error('Error deleting pending order:', error);
-        });
     }
+    } catch (error) {
+    console.error('Error deleting pending order:', error);
+  }
   };
 
   const generateWhatsAppMessage = (order: any, items: any[]) => {
@@ -495,7 +494,7 @@ export function Cart() {
                     !deliveryDetails.state ||
                     checkoutLoading
                   }
-                  orderId={orderId}
+                  orderId={orderId ?? undefined}
                   onInit={handleFlutterwaveInit}
                   className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
