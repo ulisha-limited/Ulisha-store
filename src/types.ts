@@ -84,8 +84,8 @@ export interface FlutterwaveConfig {
   payment_options: string;
   customer: {
     email: string;
-    phone_number?: string;
-    name?: string;
+    phone_number: string;
+    name: string;
   };
   customizations: {
     title: string;

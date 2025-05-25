@@ -79,7 +79,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
-      const { data: { session: authSession } } = await retryWithBackoff(() => 
+      const { data: { session: authSession } } = await retryWithBackoff(async () => 
         supabase.auth.getSession()
       );
       
@@ -89,8 +89,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
 
       // First try to get existing active session
-      const { data: existingSession } = await retryWithBackoff(() =>
-        supabase
+      const { data: existingSession } = await retryWithBackoff(async () =>
+       await supabase
           .from('shopping_sessions')
           .select('*')
           .eq('user_id', authSession.user.id)
@@ -104,8 +104,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
 
       // Close any existing sessions before creating a new one
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async() =>
+       await supabase
           .from('shopping_sessions')
           .update({ status: 'closed' })
           .eq('user_id', authSession.user.id)
@@ -113,8 +113,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       );
 
       // Create new session with error handling
-      const { data: newSession, error: insertError } = await retryWithBackoff(() =>
-        supabase
+      const { data: newSession, error: insertError } = await retryWithBackoff(async() =>
+       await supabase
           .from('shopping_sessions')
           .insert([{ 
             user_id: authSession.user.id, 
@@ -127,8 +127,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       if (insertError) {
         // If insert fails, try one more time to get existing session
         // (in case another request created one in the meantime)
-        const { data: retrySession } = await retryWithBackoff(() =>
-          supabase
+        const { data: retrySession } = await retryWithBackoff(async() =>
+         await supabase
             .from('shopping_sessions')
             .select('*')
             .eq('user_id', authSession.user.id)
@@ -158,7 +158,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
-      const { data: { session: authSession } } = await retryWithBackoff(() =>
+      const { data: { session: authSession } } = await retryWithBackoff(async () =>
         supabase.auth.getSession()
       );
       
@@ -177,8 +177,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         return;
       }
 
-      const { data: cartItems } = await retryWithBackoff(() =>
-        supabase
+      const { data: cartItems } = await retryWithBackoff(async () =>
+       await supabase
           .from('cart_items_new')
           .select(`
             *,
@@ -226,8 +226,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
 
       // Query for existing cart item with exact variant match
-      const { data: existingItem } = await retryWithBackoff(() =>
-        supabase
+      const { data: existingItem } = await retryWithBackoff(async () =>
+        await supabase
           .from('cart_items_new')
           .select('*')
           .eq('session_id', currentSession.id)
@@ -240,7 +240,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       if (existingItem) {
         // Update existing item quantity
-        await retryWithBackoff(() =>
+        await retryWithBackoff(async () =>
           supabase
             .from('cart_items_new')
             .update({ 
@@ -252,7 +252,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         );
       } else {
         // Insert new item
-        await retryWithBackoff(() =>
+        await retryWithBackoff(async () =>
           supabase
             .from('cart_items_new')
             .insert([{
@@ -284,8 +284,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       const currentSession = get().session;
       if (!currentSession?.id) return;
 
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async () =>
+        await supabase
           .from('cart_items_new')
           .delete()
           .eq('session_id', currentSession.id)
@@ -312,8 +312,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         return;
       }
 
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async () =>
+        await supabase
           .from('cart_items_new')
           .update({ quantity })
           .eq('session_id', currentSession.id)
@@ -335,8 +335,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       const currentSession = get().session;
       if (!currentSession?.id) return;
 
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async () =>
+        await supabase
           .from('cart_items_new')
           .update({ is_saved_for_later: true })
           .eq('session_id', currentSession.id)
@@ -358,8 +358,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       const currentSession = get().session;
       if (!currentSession?.id) return;
 
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async () =>
+        await supabase
           .from('cart_items_new')
           .update({ is_saved_for_later: false })
           .eq('session_id', currentSession.id)
@@ -381,8 +381,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       const currentSession = get().session;
       if (!currentSession?.id) return;
 
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async () =>
+        await supabase
           .from('cart_items_new')
           .delete()
           .eq('session_id', currentSession.id)
@@ -417,8 +417,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         payment_method: deliveryDetails?.payment_method
       };
 
-      const { data: order, error: orderError } = await retryWithBackoff(() =>
-        supabase
+      const { data: order, error: orderError } = await retryWithBackoff(async () =>
+        await supabase
           .from('orders')
           .insert([orderData])
           .select()
@@ -438,8 +438,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         selected_size: item.selected_size
       }));
 
-      await retryWithBackoff(() =>
-        supabase
+      await retryWithBackoff(async () =>
+        await supabase
           .from('order_items')
           .insert(orderItems)
       );

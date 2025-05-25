@@ -66,7 +66,12 @@ export function Affiliate() {
           .order('created_at', { ascending: false });
 
         if (referralsError) throw referralsError;
-        setReferrals(referralsData || []);
+        setReferrals(
+          referralsData.map((ref: any) => ({
+            ...ref,
+            referred_user: Array.isArray(ref.referred_user) ? ref.referred_user[0] : ref.referred_user
+          }))
+        );
       }
     } catch (error) {
       console.error('Error fetching affiliate data:', error);
