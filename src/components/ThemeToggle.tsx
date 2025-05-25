@@ -1,10 +1,9 @@
-import React from 'react';
-import { Sun, Moon } from 'lucide-react';
+import React from 'react'
+import { Sun, Moon } from 'lucide-react'
 // import { useThemeStore } from '../store/themeStore';
 
 export function ThemeToggle() {
   // const { theme, toggleTheme } = useThemeStore();
-
   // return (
   //   <button
   //     onClick={toggleTheme}

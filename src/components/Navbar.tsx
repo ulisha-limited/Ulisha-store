@@ -1,67 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, LogIn, Menu, X, Heart, Home, Store, Search, ChevronDown, MessageCircle } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { useCartStore } from '../store/cartStore';
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import {
+  ShoppingCart,
+  User,
+  LogIn,
+  Menu,
+  X,
+  Heart,
+  Home,
+  Store,
+  Search,
+  ChevronDown,
+  MessageCircle,
+} from 'lucide-react'
+import { useAuthStore } from '../store/authStore'
+import { useCartStore } from '../store/cartStore'
 
 export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const signOut = useAuthStore((state) => state.signOut);
-  const user = useAuthStore((state) => state.user);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const cartItems = useCartStore((state) => state.items);
-  const fetchCart = useCartStore((state) => state.fetchCart);
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com'];
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
+  const signOut = useAuthStore((state) => state.signOut)
+  const user = useAuthStore((state) => state.user)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const cartItems = useCartStore((state) => state.items)
+  const fetchCart = useCartStore((state) => state.fetchCart)
+
+  const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com']
+  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email)
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetchCart();
+      fetchCart()
     }
-  }, [isLoggedIn, fetchCart]);
+  }, [isLoggedIn, fetchCart])
 
   useEffect(() => {
     // Close dropdowns when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
+      const target = event.target as HTMLElement
       if (!target.closest('.profile-menu') && isProfileOpen) {
-        setIsProfileOpen(false);
+        setIsProfileOpen(false)
       }
       if (!target.closest('.search-container') && isSearchOpen) {
-        setIsSearchOpen(false);
+        setIsSearchOpen(false)
       }
-    };
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isProfileOpen, isSearchOpen]);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isProfileOpen, isSearchOpen])
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      navigate('/login');
+      await signOut()
+      navigate('/login')
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Error signing out:', error)
     }
-  };
+  }
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
-      setIsSearchOpen(false);
+      navigate(`/?search=${encodeURIComponent(searchQuery)}`)
+      setIsSearchOpen(false)
     }
-  };
+  }
 
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   return (
     <header className="bg-[#007BFF] shadow-lg relative text-white">
@@ -73,15 +85,23 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <span>Free shipping on orders over ₦50,000</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
-            <a href="#" className="hover:text-primary-orange transition-colors">Track Order</a>
-            <a href="#" className="hover:text-primary-orange transition-colors">Help</a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              Track Order
+            </a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              Help
+            </a>
             <div className="h-4 w-px bg-blue-300"></div>
-            <a href="#" className="hover:text-primary-orange transition-colors">English</a>
-            <a href="#" className="hover:text-primary-orange transition-colors">NGN</a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              English
+            </a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              NGN
+            </a>
           </div>
         </div>
       </div>
-      
+
       {/* Main navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
@@ -105,7 +125,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               Home
             </Link>
-            
+
             <Link
               to="/wishlist"
               className={`text-white hover:text-primary-orange transition-colors font-medium ${
@@ -114,7 +134,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               Wishlist
             </Link>
-            
+
             {isLoggedIn && (
               <Link
                 to="/my-store"
@@ -125,7 +145,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 My Store
               </Link>
             )}
-            
+
             <Link
               to="/chat-support"
               className={`text-white hover:text-primary-orange transition-colors font-medium ${
@@ -146,7 +166,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               >
                 <Search className="h-5 w-5" />
               </button>
-              
+
               {isSearchOpen && (
                 <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-3 z-50">
                   <form onSubmit={handleSearch} className="flex">
@@ -168,7 +188,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </div>
               )}
             </div>
-            
+
             {/* Wishlist */}
             <Link
               to="/wishlist"
@@ -176,7 +196,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               <Heart className="h-5 w-5" />
             </Link>
-            
+
             {/* Cart */}
             <Link
               to="/cart"
@@ -189,7 +209,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </span>
               )}
             </Link>
-            
+
             {/* User profile */}
             {isLoggedIn ? (
               <div className="relative profile-menu">
@@ -201,9 +221,11 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                   <span className="hidden xl:inline text-sm font-medium">
                     {user?.user_metadata?.full_name || 'My Account'}
                   </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
-                
+
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     {isAdmin ? (
@@ -268,7 +290,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </span>
               )}
             </Link>
-            
+
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-white hover:text-primary-orange transition-colors focus:outline-none"
@@ -280,7 +302,9 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} lg:hidden absolute w-full bg-white shadow-lg z-50`}>
+      <div
+        className={`${isMenuOpen ? 'block' : 'hidden'} lg:hidden absolute w-full bg-white shadow-lg z-50`}
+      >
         <div className="px-4 pt-4 pb-4 space-y-3">
           {/* Mobile search */}
           <form onSubmit={handleSearch} className="flex mb-4">
@@ -298,7 +322,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Search className="h-4 w-4" />
             </button>
           </form>
-          
+
           <Link
             to="/"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -307,7 +331,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Home className="h-5 w-5" />
             <span>Home</span>
           </Link>
-          
+
           <Link
             to="/wishlist"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -316,7 +340,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Heart className="h-5 w-5" />
             <span>Wishlist</span>
           </Link>
-          
+
           <Link
             to="/cart"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -325,7 +349,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <ShoppingCart className="h-5 w-5" />
             <span>Cart ({cartItemCount})</span>
           </Link>
-          
+
           {isLoggedIn ? (
             <>
               {isAdmin ? (
@@ -367,8 +391,8 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               </Link>
               <button
                 onClick={() => {
-                  handleSignOut();
-                  setIsMenuOpen(false);
+                  handleSignOut()
+                  setIsMenuOpen(false)
                 }}
                 className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
               >
@@ -386,7 +410,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <span>Login</span>
             </Link>
           )}
-          
+
           <Link
             to="/chat-support"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -398,5 +422,5 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
         </div>
       </div>
     </header>
-  );
+  )
 }
