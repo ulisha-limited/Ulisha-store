@@ -164,10 +164,10 @@ export function AdCarousel({ className = '' }: AdCarouselProps) {
         loop={true}
         className="h-[200px] sm:h-[250px]"
         onInit={(swiper) => {
-          // @ts-ignore
-          swiper.params.navigation.prevEl = prevRef.current;
-          // @ts-ignore
-          swiper.params.navigation.nextEl = nextRef.current;
+            // @ts-expect-error: Swiper types do not recognize dynamic prevEl assignment
+            swiper.params.navigation.prevEl = prevRef.current;
+            // @ts-expect-error: Swiper types do not recognize dynamic nextEl assignment
+            swiper.params.navigation.nextEl = nextRef.current;
           swiper.navigation.init();
           swiper.navigation.update();
         }}

@@ -1,3 +1,24 @@
+export interface AffiliateAccount {
+  id: string;
+  referral_code: string;
+  earnings: number;
+  paid_earnings: number;
+  status: string;
+  created_at: string;
+  referral_count: number;
+}
+
+export interface AffiliateReferral {
+  id: string;
+  referred_user: {
+    email: string;
+    user_metadata: {
+      full_name: string;
+    };
+  };
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   name: string;
