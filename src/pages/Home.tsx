@@ -10,7 +10,6 @@ import { fallbackProducts } from '../lib/supabase'
 const categories = [
   'All Categories',
   'Clothes',
-  'Female Clothing',
   'Accessories',
   'Shoes',
   'Smart Watches',
@@ -246,20 +245,6 @@ export function Home() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {products.length > 0 && (
-              <div className="mb-12">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">Most Searched Products</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {products
-                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-                    .slice(0, 5)
-                    .map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-              </div>
-            )}
-
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-xl font-bold text-gray-900">
                 {selectedCategory === 'All Categories' ? 'Featured Products' : selectedCategory}

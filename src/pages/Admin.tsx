@@ -19,20 +19,6 @@ import type { Product } from '../types'
 
 const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com']
 
-const categories = [
-  'Clothes',
-  'Female Clothing',
-  'Accessories',
-  'Shoes',
-  'Smart Watches',
-  'Electronics',
-  'Perfumes & Body Spray',
-  'Phones',
-  'Handbags',
-  'Jewelries',
-  'Gym Wear',
-]
-
 export function Admin() {
   const [loading, setLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
@@ -628,14 +614,24 @@ export function Admin() {
                   <select
                     required
                     value={productData.category}
-                    onChange={(e) => setProductData({ ...productData, category: e.target.value })}
+                    onChange={(e) =>
+                      setProductData({
+                        ...productData,
+                        category: e.target.value,
+                      })
+                    }
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-orange focus:ring-primary-orange"
                   >
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
+                    <option value="Clothes">Clothes</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Shoes">Shoes</option>
+                    <option value="Smart Watches">Smart Watches</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Perfumes & Body Spray">Perfumes & Body Spray</option>
+                    <option value="Phones">Phones</option>
+                    <option value="Handbags">Handbags</option>
+                    <option value="Jewelries">Jewelries</option>
+                    <option value="Gym Wear">Gym Wear</option>
                   </select>
                 </div>
               </div>
