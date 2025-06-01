@@ -303,21 +303,7 @@ export function Home() {
         <footer className="bg-gray-900 text-white mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="hidden md:block mb-8">
-              <h3 className="text-lg font-semibold mb-4">Shop by Category</h3>
-              <ul className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3 text-gray-400">
-                {categories
-                  .filter((category) => category !== 'All Categories')
-                  .map((category) => (
-                    <li key={category}>
-                      <Link
-                        to={`/?category=${encodeURIComponent(category)}`}
-                        className="hover:text-primary-orange transition-colors"
-                      >
-                        {category}
-                      </Link>
-                    </li>
-                  ))}
-              </ul>
+             
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
