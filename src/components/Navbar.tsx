@@ -12,6 +12,7 @@ import {
   Search,
   ChevronDown,
   MessageCircle,
+  Users,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
@@ -76,26 +77,26 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   return (
-    <header className="bg-[#007BFF] shadow-lg relative text-white">
+    <header className="bg-white shadow-lg relative">
       {/* Top bar with contact info and social links */}
-      <div className="hidden lg:block bg-[#0066CC] py-2">
+      <div className="hidden lg:block bg-gray-900 py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="text-sm">
+          <div className="text-sm text-gray-300">
             <span className="mr-4">support@ulishastore.com</span>
             <span>Free shipping on orders over ₦50,000</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
-            <a href="#" className="hover:text-primary-orange transition-colors">
+            <a href="#" className="text-gray-300 hover:text-primary-orange transition-colors">
               Track Order
             </a>
-            <a href="#" className="hover:text-primary-orange transition-colors">
+            <a href="#" className="text-gray-300 hover:text-primary-orange transition-colors">
               Help
             </a>
-            <div className="h-4 w-px bg-blue-300"></div>
-            <a href="#" className="hover:text-primary-orange transition-colors">
+            <div className="h-4 w-px bg-gray-700"></div>
+            <a href="#" className="text-gray-300 hover:text-primary-orange transition-colors">
               English
             </a>
-            <a href="#" className="hover:text-primary-orange transition-colors">
+            <a href="#" className="text-gray-300 hover:text-primary-orange transition-colors">
               NGN
             </a>
           </div>
@@ -110,7 +111,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Link to="/" className="flex items-center space-x-2 group">
               <span className="text-xl lg:text-2xl font-bold">
                 <span className="text-primary-orange">Ulisha</span>
-                <span className="text-white">Store</span>
+                <span className="text-gray-900">Store</span>
               </span>
             </Link>
           </div>
@@ -119,7 +120,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           <div className="hidden lg:flex items-center space-x-8">
             <Link
               to="/"
-              className={`text-white hover:text-primary-orange transition-colors font-medium ${
+              className={`text-gray-700 hover:text-primary-orange transition-colors font-medium ${
                 location.pathname === '/' && !location.search ? 'text-primary-orange' : ''
               }`}
             >
@@ -128,7 +129,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
             <Link
               to="/wishlist"
-              className={`text-white hover:text-primary-orange transition-colors font-medium ${
+              className={`text-gray-700 hover:text-primary-orange transition-colors font-medium ${
                 location.pathname === '/wishlist' ? 'text-primary-orange' : ''
               }`}
             >
@@ -136,19 +137,29 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             </Link>
 
             {isLoggedIn && (
-              <Link
-                to="/my-store"
-                className={`text-white hover:text-primary-orange transition-colors font-medium ${
-                  location.pathname === '/my-store' ? 'text-primary-orange' : ''
-                }`}
-              >
-                My Store
-              </Link>
+              <>
+                <Link
+                  to="/my-store"
+                  className={`text-gray-700 hover:text-primary-orange transition-colors font-medium ${
+                    location.pathname === '/my-store' ? 'text-primary-orange' : ''
+                  }`}
+                >
+                  My Store
+                </Link>
+                <Link
+                  to="/affiliate"
+                  className={`text-gray-700 hover:text-primary-orange transition-colors font-medium ${
+                    location.pathname === '/affiliate' ? 'text-primary-orange' : ''
+                  }`}
+                >
+                  Affiliate
+                </Link>
+              </>
             )}
 
             <Link
               to="/chat-support"
-              className={`text-white hover:text-primary-orange transition-colors font-medium ${
+              className={`text-gray-700 hover:text-primary-orange transition-colors font-medium ${
                 location.pathname === '/chat-support' ? 'text-primary-orange' : ''
               }`}
             >
@@ -162,7 +173,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <div className="relative search-container">
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-white hover:text-primary-orange transition-colors focus:outline-none"
+                className="text-gray-700 hover:text-primary-orange transition-colors focus:outline-none"
               >
                 <Search className="h-5 w-5" />
               </button>
@@ -192,7 +203,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             {/* Wishlist */}
             <Link
               to="/wishlist"
-              className="text-white hover:text-primary-orange transition-colors relative"
+              className="text-gray-700 hover:text-primary-orange transition-colors relative"
             >
               <Heart className="h-5 w-5" />
             </Link>
@@ -200,7 +211,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             {/* Cart */}
             <Link
               to="/cart"
-              className="text-white hover:text-primary-orange transition-colors relative"
+              className="text-gray-700 hover:text-primary-orange transition-colors relative"
             >
               <ShoppingCart className="h-5 w-5" />
               {cartItemCount > 0 && (
@@ -215,7 +226,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div className="relative profile-menu">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="text-white hover:text-primary-orange transition-colors focus:outline-none flex items-center space-x-2"
+                  className="text-gray-700 hover:text-primary-orange transition-colors focus:outline-none flex items-center space-x-2"
                 >
                   <User className="h-5 w-5" />
                   <span className="hidden xl:inline text-sm font-medium">
@@ -249,6 +260,12 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                         >
                           My Store
                         </Link>
+                        <Link
+                          to="/affiliate"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Affiliate Program
+                        </Link>
                       </>
                     )}
                     <Link
@@ -269,7 +286,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             ) : (
               <Link
                 to="/login"
-                className="text-white hover:text-primary-orange transition-colors flex items-center space-x-2"
+                className="text-gray-700 hover:text-primary-orange transition-colors flex items-center space-x-2"
               >
                 <LogIn className="h-5 w-5" />
                 <span className="hidden xl:inline text-sm font-medium">Sign In</span>
@@ -281,7 +298,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           <div className="flex items-center space-x-4 lg:hidden">
             <Link
               to="/cart"
-              className="text-white hover:text-primary-orange transition-colors relative"
+              className="text-gray-700 hover:text-primary-orange transition-colors relative"
             >
               <ShoppingCart className="h-6 w-6" />
               {cartItemCount > 0 && (
@@ -293,7 +310,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:text-primary-orange transition-colors focus:outline-none"
+              className="text-gray-700 hover:text-primary-orange transition-colors focus:outline-none"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -325,7 +342,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <Link
             to="/"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
             onClick={() => setIsMenuOpen(false)}
           >
             <Home className="h-5 w-5" />
@@ -334,7 +351,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <Link
             to="/wishlist"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
             onClick={() => setIsMenuOpen(false)}
           >
             <Heart className="h-5 w-5" />
@@ -343,7 +360,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <Link
             to="/cart"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
             onClick={() => setIsMenuOpen(false)}
           >
             <ShoppingCart className="h-5 w-5" />
@@ -355,7 +372,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               {isAdmin ? (
                 <Link
                   to="/admin"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <User className="h-5 w-5" />
@@ -365,7 +382,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <>
                   <Link
                     to="/dashboard"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="h-5 w-5" />
@@ -373,17 +390,25 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                   </Link>
                   <Link
                     to="/my-store"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Store className="h-5 w-5" />
                     <span>My Store</span>
                   </Link>
+                  <Link
+                    to="/affiliate"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Users className="h-5 w-5" />
+                    <span>Affiliate Program</span>
+                  </Link>
                 </>
               )}
               <Link
                 to="/settings"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <User className="h-5 w-5" />
@@ -394,7 +419,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                   handleSignOut()
                   setIsMenuOpen(false)
                 }}
-                className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
               >
                 <LogIn className="h-5 w-5" />
                 <span>Logout</span>
@@ -403,7 +428,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           ) : (
             <Link
               to="/login"
-              className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               <LogIn className="h-5 w-5" />
@@ -413,7 +438,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <Link
             to="/chat-support"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:text-primary-orange hover:bg-gray-50"
             onClick={() => setIsMenuOpen(false)}
           >
             <MessageCircle className="h-5 w-5" />
