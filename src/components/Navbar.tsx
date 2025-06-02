@@ -12,6 +12,7 @@ import {
   Search,
   ChevronDown,
   MessageCircle,
+  Users,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
@@ -136,14 +137,28 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             </Link>
 
             {isLoggedIn && (
-              <Link
-                to="/my-store"
-                className={`text-white hover:text-primary-orange transition-colors font-medium ${
-                  location.pathname === '/my-store' ? 'text-primary-orange' : ''
-                }`}
-              >
-                My Store
-              </Link>
+              <>
+                <Link
+                  to="/my-store"
+                  className={`text-white hover:text-primary-orange transition-colors font-medium ${
+                    location.pathname === '/my-store' ? 'text-primary-orange' : ''
+                  }`}
+                >
+                  My Store
+                </Link>
+
+                <Link
+                  to="/affiliate"
+                  className={`text-white hover:text-primary-orange transition-colors font-medium ${
+                    location.pathname === '/affiliate' ? 'text-primary-orange' : ''
+                  }`}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-4 h-4" />
+                    <span>Affiliate</span>
+                  </div>
+                </Link>
+              </>
             )}
 
             <Link
@@ -248,6 +263,12 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           My Store
+                        </Link>
+                        <Link
+                          to="/affiliate"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Affiliate Program
                         </Link>
                       </>
                     )}
@@ -378,6 +399,14 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                   >
                     <Store className="h-5 w-5" />
                     <span>My Store</span>
+                  </Link>
+                  <Link
+                    to="/affiliate"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Users className="h-5 w-5" />
+                    <span>Affiliate Program</span>
                   </Link>
                 </>
               )}
