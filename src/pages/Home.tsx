@@ -6,9 +6,11 @@ import { supabase } from '../lib/supabase'
 import type { Product } from '../types'
 import { useLocation, Link } from 'react-router-dom'
 import { fallbackProducts } from '../lib/supabase'
+import { useRecentlyViewedStore } from '../stores/recentlyViewed'
 
 const categories = [
   'All Categories',
+  'Female Clothing',
   'Clothes',
   'Accessories',
   'Shoes',
@@ -35,6 +37,7 @@ export function Home() {
   const [usesFallback, setUsesFallback] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const location = useLocation()
+  const recentlyViewed = useRecentlyViewedStore((state) => state.products)
 
   useEffect(() => {
     fetchProductsWithRetry()
@@ -293,6 +296,18 @@ export function Home() {
                 {filteredProducts.length === 0 && (
                   <div className="text-center py-12">
                     <p className="text-gray-500">No products found matching your criteria.</p>
+                  </div>
+                )}
+
+                {/* Recently Viewed Section */}
+                {recentlyViewed.length > 0 && (
+                  <div className="mt-12">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">Recently Viewed</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {recentlyViewed.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
