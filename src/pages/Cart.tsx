@@ -1,153 +1,143 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import {
-  Trash2,
-  Minus,
-  Plus,
-  CreditCard,
-  ShoppingBag,
-  Loader,
-  Truck,
-  X,
-  MessageCircle,
-} from 'lucide-react'
-import { useCartStore } from '../store/cartStore'
-import { useAuthStore } from '../store/authStore'
-import { FlutterwavePayment } from '../components/FlutterwavePayment'
-import { OrderReceipt } from '../components/OrderReceipt'
-import { supabase } from '../lib/supabase'
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle } from 'lucide-react';
+import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
+import { FlutterwavePayment } from '../components/FlutterwavePayment';
+import { OrderReceipt } from '../components/OrderReceipt';
+import { supabase } from '../lib/supabase';
 
-const DELIVERY_FEE = 4000 // ₦4,000
-const FREE_DELIVERY_THRESHOLD = 30000 // ₦30,000
+const DELIVERY_FEE = 4000; // ₦4,000
+const FREE_DELIVERY_THRESHOLD = 50000; // ₦50,000
 
 export function Cart() {
-  const { items, removeFromCart, updateQuantity, loading, fetchCart, clearCart } = useCartStore()
-  const user = useAuthStore((state) => state.user)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [showReceipt, setShowReceipt] = useState(false)
-  const [currentOrder, setCurrentOrder] = useState<any>(null)
-  const [orderId, setOrderId] = useState<string | null>(null)
-
+  const { items, removeFromCart, updateQuantity, loading, fetchCart, clearCart } = useCartStore();
+  const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState<any>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  
   // Delivery details state
   const [deliveryDetails, setDeliveryDetails] = useState({
     name: '',
     phone: '',
     address: '',
-    state: '',
-  })
+    state: ''
+  });
 
   useEffect(() => {
     if (user) {
-      fetchCart()
+      fetchCart();
     }
-  }, [user, fetchCart])
+  }, [user, fetchCart]);
 
   useEffect(() => {
     // Check if we're returning from a redirect payment
-    const urlParams = new URLSearchParams(window.location.search)
-    const paymentSuccess = urlParams.get('payment_success')
-
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('payment_success');
+    
     if (paymentSuccess === 'true') {
       // Clear the URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname)
-
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
       // Clear the cart
-      clearCart().catch((err) => console.error('Error clearing cart:', err))
-
+      clearCart().catch(err => console.error('Error clearing cart:', err));
+      
       // Show success message and redirect to dashboard
-      showNotification('Payment successful! Your order has been placed.', 'success')
-      navigate('/dashboard')
+      showNotification('Payment successful! Your order has been placed.', 'success');
+      navigate('/dashboard');
     }
-  }, [navigate, clearCart])
+  }, [navigate, clearCart]);
 
   const subtotal = items.reduce((sum, item) => {
     if (item.product) {
-      return sum + item.product.price * item.quantity
+      return sum + item.product.price * item.quantity;
     }
-    return sum
-  }, 0)
+    return sum;
+  }, 0);
 
   // Calculate delivery fee - free if subtotal is above threshold
-  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
-  const total = subtotal + deliveryFee
+  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const total = subtotal + deliveryFee;
 
   const handleQuantityChange = async (productId: string, newQuantity: number) => {
-    if (newQuantity < 1) return
+    if (newQuantity < 1) return;
     try {
-      await updateQuantity(productId, newQuantity)
+      await updateQuantity(productId, newQuantity);
     } catch (error) {
-      console.error('Error updating quantity:', error)
+      console.error('Error updating quantity:', error);
     }
-  }
+  };
 
   const handleRemoveItem = async (productId: string) => {
     try {
-      await removeFromCart(productId)
+      await removeFromCart(productId);
     } catch (error) {
-      console.error('Error removing item:', error)
+      console.error('Error removing item:', error);
     }
-  }
+  };
 
   const createOrder = async () => {
     try {
       // Create initial order with pending status
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert([
-          {
-            user_id: user?.id,
-            total: total,
-            status: 'pending',
-            delivery_name: deliveryDetails.name,
-            delivery_phone: deliveryDetails.phone,
-            delivery_address: `${deliveryDetails.address}, ${deliveryDetails.state}`,
-            payment_method: 'flutterwave',
-          },
-        ])
+        .insert([{
+          user_id: user?.id,
+          total: total,
+          status: 'pending',
+          delivery_name: deliveryDetails.name,
+          delivery_phone: deliveryDetails.phone,
+          delivery_address: `${deliveryDetails.address}, ${deliveryDetails.state}`,
+          payment_method: 'flutterwave'
+        }])
         .select()
-        .single()
+        .single();
 
-      if (orderError) throw orderError
+      if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = items.map((item) => ({
+      const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
         quantity: item.quantity,
-        price: item.product.price,
-      }))
+        price: item.product.price
+      }));
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
 
-      if (itemsError) throw itemsError
+      if (itemsError) throw itemsError;
 
-      return order.id
+      return order.id;
     } catch (error) {
-      console.error('Error creating order:', error)
-      throw error
+      console.error('Error creating order:', error);
+      throw error;
     }
-  }
+  };
 
   const handleFlutterwaveInit = async () => {
     try {
-      setCheckoutLoading(true)
-      const newOrderId = await createOrder()
-      setOrderId(newOrderId)
-      return newOrderId
+      setCheckoutLoading(true);
+      const newOrderId = await createOrder();
+      setOrderId(newOrderId);
+      return newOrderId;
     } catch (error) {
-      console.error('Error initializing payment:', error)
-      showNotification('Error creating order. Please try again.', 'error')
-      setCheckoutLoading(false)
-      return null
+      console.error('Error initializing payment:', error);
+      showNotification('Error creating order. Please try again.', 'error');
+      setCheckoutLoading(false);
+      return null;
     }
-  }
+  };
 
   const handleFlutterwaveSuccess = async (response: any) => {
     try {
       if (!orderId) {
-        throw new Error('No order ID found')
+        throw new Error('No order ID found');
       }
 
       // Update order with payment details
@@ -155,114 +145,112 @@ export function Cart() {
         .from('orders')
         .update({
           payment_ref: response.transaction_id || response.tx_ref,
-          status: 'completed',
+          status: 'completed'
         })
         .eq('id', orderId)
         .select()
-        .single()
+        .single();
 
-      if (updateError) throw updateError
+      if (updateError) throw updateError;
 
       // Set current order for receipt
-      setCurrentOrder(updatedOrder)
-      setShowReceipt(true)
+      setCurrentOrder(updatedOrder);
+      setShowReceipt(true);
 
       // Generate WhatsApp message
-      const whatsappMessage = generateWhatsAppMessage(updatedOrder, items)
-
+      const whatsappMessage = generateWhatsAppMessage(updatedOrder, items);
+      
       // Open WhatsApp with pre-filled message
-      window.open(
-        `https://wa.me/2347060438205?text=${encodeURIComponent(whatsappMessage)}`,
-        '_blank',
-      )
+      window.open(`https://wa.me/2347060438205?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
 
       // Clear the cart after successful payment
-      await clearCart()
-
+      await clearCart();
+      
       // Show success notification
-      showNotification('Order placed successfully! You can now download your receipt.', 'success')
+      showNotification('Order placed successfully! You can now download your receipt.', 'success');
     } catch (error) {
-      console.error('Error processing order after payment:', error)
-      showNotification(
-        'Payment was successful, but there was an error processing your order. Please contact support.',
-        'error',
-      )
+      console.error('Error processing order after payment:', error);
+      showNotification('Payment was successful, but there was an error processing your order. Please contact support.', 'error');
     } finally {
-      setCheckoutLoading(false)
-      setOrderId(null)
+      setCheckoutLoading(false);
+      setOrderId(null);
     }
-  }
+  };
 
-  const handleFlutterwaveClose = async () => {
+  const handleFlutterwaveClose = () => {
     // If payment was cancelled, delete the pending order
-    try {
-      if (orderId) {
-        await supabase.from('orders').delete().eq('id', orderId)
-        setOrderId(null)
-        console.log('Pending order deleted')
-      }
-    } catch (error) {
-      console.error('Error deleting pending order:', error)
+    if (orderId) {
+      supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId)
+        .then(() => {
+          setOrderId(null);
+          console.log('Pending order deleted');
+        })
+        .catch(error => {
+          console.error('Error deleting pending order:', error);
+        });
     }
-  }
+  };
 
   const generateWhatsAppMessage = (order: any, items: any[]) => {
     const formattedTotal = new Intl.NumberFormat('en-NG', {
       style: 'currency',
-      currency: 'NGN',
-    }).format(order.total)
+      currency: 'NGN'
+    }).format(order.total);
 
-    let message = `🛍️ *New Order #${order.id.substring(0, 8)}*\n\n`
-    message += `*Customer Details:*\n`
-    message += `Name: ${order.delivery_name}\n`
-    message += `Phone: ${order.delivery_phone}\n`
-    message += `Address: ${order.delivery_address}\n\n`
-
-    message += `*Order Items:*\n`
-    items.forEach((item) => {
+    let message = `🛍️ *New Order #${order.id.substring(0, 8)}*\n\n`;
+    message += `*Customer Details:*\n`;
+    message += `Name: ${order.delivery_name}\n`;
+    message += `Phone: ${order.delivery_phone}\n`;
+    message += `Address: ${order.delivery_address}\n\n`;
+    
+    message += `*Order Items:*\n`;
+    items.forEach(item => {
       const subtotal = new Intl.NumberFormat('en-NG', {
         style: 'currency',
-        currency: 'NGN',
-      }).format(item.quantity * item.product.price)
+        currency: 'NGN'
+      }).format(item.quantity * item.product.price);
+      
+      message += `• ${item.product.name} (×${item.quantity}) - ${subtotal}\n`;
+    });
+    
+    message += `\n*Total Amount:* ${formattedTotal}\n`;
+    message += `*Payment Method:* ${order.payment_method}\n`;
+    message += `*Payment Reference:* ${order.payment_ref}\n\n`;
+    message += `Please process my order. Thank you!`;
 
-      message += `• ${item.product.name} (×${item.quantity}) - ${subtotal}\n`
-    })
-
-    message += `\n*Total Amount:* ${formattedTotal}\n`
-    message += `*Payment Method:* ${order.payment_method}\n`
-    message += `*Payment Reference:* ${order.payment_ref}\n\n`
-    message += `Please process my order. Thank you!`
-
-    return message
-  }
+    return message;
+  };
 
   const handleChatWithSales = () => {
-    const message = "Hello! I'm interested in making a purchase from Ulisha Store. Can you help me?"
-    window.open(`https://wa.me/2347060438205?text=${encodeURIComponent(message)}`, '_blank')
-  }
+    const message = "Hello! I'm interested in making a purchase from Ulisha Store. Can you help me?";
+    window.open(`https://wa.me/2347060438205?text=${encodeURIComponent(message)}`, '_blank');
+  };
 
   const showNotification = (message: string, type: 'success' | 'error') => {
-    const notification = document.createElement('div')
+    const notification = document.createElement('div');
     notification.className = `fixed bottom-4 right-4 ${
       type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    } text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in`
-    notification.textContent = message
-    document.body.appendChild(notification)
-
+    } text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
     setTimeout(() => {
-      notification.classList.add('animate-fade-out')
+      notification.classList.add('animate-fade-out');
       setTimeout(() => {
-        document.body.removeChild(notification)
-      }, 300)
-    }, 3000)
-  }
+        document.body.removeChild(notification);
+      }, 300);
+    }, 3000);
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader className="h-8 w-8 animate-spin text-primary-orange" />
       </div>
-    )
+    );
   }
 
   if (!items.length) {
@@ -280,7 +268,7 @@ export function Cart() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -304,8 +292,8 @@ export function Cart() {
 
                 <div className="space-y-4">
                   {items.map((item) => {
-                    if (!item.product) return null
-
+                    if (!item.product) return null;
+                    
                     return (
                       <div
                         key={item.id}
@@ -318,9 +306,7 @@ export function Cart() {
                             className="w-20 h-20 object-cover rounded-md"
                           />
                           <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {item.product.name}
-                            </h3>
+                            <h3 className="text-sm font-medium text-gray-900">{item.product.name}</h3>
                             <p className="text-sm text-gray-500">{item.product.category}</p>
                             {/* Display selected variant details */}
                             {(item.selected_color || item.selected_size) && (
@@ -328,13 +314,15 @@ export function Cart() {
                                 {item.selected_color && (
                                   <span className="mr-2">Color: {item.selected_color}</span>
                                 )}
-                                {item.selected_size && <span>Size: {item.selected_size}</span>}
+                                {item.selected_size && (
+                                  <span>Size: {item.selected_size}</span>
+                                )}
                               </div>
                             )}
                             <p className="text-lg font-bold text-gray-900 mt-1">
                               {new Intl.NumberFormat('en-NG', {
                                 style: 'currency',
-                                currency: 'NGN',
+                                currency: 'NGN'
                               }).format(item.product.price)}
                             </p>
                           </div>
@@ -342,9 +330,7 @@ export function Cart() {
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() =>
-                                handleQuantityChange(item.product_id, item.quantity - 1)
-                              }
+                              onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
                               className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
                               disabled={loading || item.quantity <= 1}
                             >
@@ -352,9 +338,7 @@ export function Cart() {
                             </button>
                             <span className="w-8 text-center">{item.quantity}</span>
                             <button
-                              onClick={() =>
-                                handleQuantityChange(item.product_id, item.quantity + 1)
-                              }
+                              onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
                               className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
                               disabled={loading}
                             >
@@ -370,7 +354,7 @@ export function Cart() {
                           </button>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -387,7 +371,7 @@ export function Cart() {
                   <span>
                     {new Intl.NumberFormat('en-NG', {
                       style: 'currency',
-                      currency: 'NGN',
+                      currency: 'NGN'
                     }).format(subtotal)}
                   </span>
                 </div>
@@ -405,37 +389,36 @@ export function Cart() {
                       ) : (
                         new Intl.NumberFormat('en-NG', {
                           style: 'currency',
-                          currency: 'NGN',
+                          currency: 'NGN'
                         }).format(deliveryFee)
                       )}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500">
-                    {subtotal >= FREE_DELIVERY_THRESHOLD
-                      ? "You've qualified for free delivery!"
-                      : `Add ${new Intl.NumberFormat('en-NG', {
-                          style: 'currency',
-                          currency: 'NGN',
-                        }).format(FREE_DELIVERY_THRESHOLD - subtotal)} more to get free delivery`}
+                    {subtotal >= FREE_DELIVERY_THRESHOLD ? (
+                      "You've qualified for free delivery!"
+                    ) : (
+                      `Add ${new Intl.NumberFormat('en-NG', {
+                        style: 'currency',
+                        currency: 'NGN'
+                      }).format(FREE_DELIVERY_THRESHOLD - subtotal)} more to get free delivery`
+                    )}
                   </p>
                 </div>
-                <p className="text-xs text-gray-700">
-                  Delivery Takes 1 to 14 days after payment- We will call you to confirm delivery
-                  information before sending
-                </p>
+                <p className="text-xs text-gray-700">Delivery Takes 1 to 14 days after payment- We will call you to confirm delivery information before sending</p>
                 <div className="border-t pt-4">
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
                     <span>
                       {new Intl.NumberFormat('en-NG', {
                         style: 'currency',
-                        currency: 'NGN',
+                        currency: 'NGN'
                       }).format(total)}
                     </span>
                   </div>
                 </div>
               </div>
-
+              
               {/* Contact Information */}
               <div>
                 <h3 className="text-md font-semibold text-gray-900 mb-3">Contact Information</h3>
@@ -450,12 +433,7 @@ export function Cart() {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
                       value={deliveryDetails.name}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          name: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setDeliveryDetails({...deliveryDetails, name: e.target.value})}
                     />
                   </div>
                   <div>
@@ -468,12 +446,7 @@ export function Cart() {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
                       value={deliveryDetails.phone}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          phone: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setDeliveryDetails({...deliveryDetails, phone: e.target.value})}
                     />
                   </div>
                   <div>
@@ -486,20 +459,12 @@ export function Cart() {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
                       value={deliveryDetails.state}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          state: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setDeliveryDetails({...deliveryDetails, state: e.target.value})}
                       placeholder="Enter your state"
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="address"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                       Delivery Address
                     </label>
                     <textarea
@@ -508,17 +473,12 @@ export function Cart() {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
                       value={deliveryDetails.address}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          address: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setDeliveryDetails({...deliveryDetails, address: e.target.value})}
                       placeholder="Enter your full delivery address"
                     />
                   </div>
                 </div>
-
+                
                 <FlutterwavePayment
                   amount={total}
                   onSuccess={handleFlutterwaveSuccess}
@@ -526,16 +486,16 @@ export function Cart() {
                   customerInfo={{
                     name: deliveryDetails.name,
                     email: user?.email || '',
-                    phone: deliveryDetails.phone,
+                    phone: deliveryDetails.phone
                   }}
                   disabled={
-                    !deliveryDetails.name ||
-                    !deliveryDetails.phone ||
+                    !deliveryDetails.name || 
+                    !deliveryDetails.phone || 
                     !deliveryDetails.address ||
                     !deliveryDetails.state ||
                     checkoutLoading
                   }
-                  orderId={orderId ?? undefined}
+                  orderId={orderId}
                   onInit={handleFlutterwaveInit}
                   className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -570,5 +530,5 @@ export function Cart() {
         </div>
       )}
     </div>
-  )
+  );
 }

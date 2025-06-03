@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 export function Settings() {
   return (
@@ -12,5 +12,5 @@ export function Settings() {
         </div>
       </div>
     </div>
-  )
+  );
 }

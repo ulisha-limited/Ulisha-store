@@ -1,158 +1,151 @@
-import React, { useState, useEffect } from 'react'
-import { ProductCard } from '../components/ProductCard'
-import { AdCarousel } from '../components/AdCarousel'
-import { Search, ChevronDown, Facebook, Twitter, Instagram, Youtube, Phone } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import type { Product } from '../types'
-import { useLocation, Link } from 'react-router-dom'
-import { fallbackProducts } from '../lib/supabase'
-import { useRecentlyViewedStore } from '../store/recentlyViewedStore'
+import React, { useState, useEffect } from 'react';
+import { ProductCard } from '../components/ProductCard';
+import { AdCarousel } from '../components/AdCarousel';
+import { Search, ChevronDown, Facebook, Twitter, Instagram, Youtube, Phone } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import type { Product } from '../types';
+import { useLocation, Link } from 'react-router-dom';
+import { fallbackProducts } from '../lib/supabase';
 
 const categories = [
-  'All Categories',
-  'Female Clothing',
-  'Clothes',
-  'Accessories',
-  'Shoes',
-  'Smart Watches',
+  'All Categories', 
+  'Clothes', 
+  'Accessories', 
+  'Shoes', 
+  'Smart Watches', 
   'Electronics',
   'Perfumes & Body Spray',
   'Phones',
   'Handbags',
   'Jewelries',
-  'Gym Wear',
-]
+  'Gym Wear'
+  
+];
 
-const MAX_RETRIES = 3
-const RETRY_DELAY = 1000 // 1 second
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
 export function Home() {
-  const [selectedCategory, setSelectedCategory] = useState('All Categories')
-  const [selectedLocation, setSelectedLocation] = useState('All Locations')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showCategories, setShowCategories] = useState(false)
-  const [showLocations, setShowLocations] = useState(false)
-  const [usesFallback, setUsesFallback] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const location = useLocation()
-  const recentlyViewed = useRecentlyViewedStore((state) => state.products)
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [selectedLocation, setSelectedLocation] = useState('All Locations');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCategories, setShowCategories] = useState(false);
+  const [showLocations, setShowLocations] = useState(false);
+  const [usesFallback, setUsesFallback] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
-    fetchProductsWithRetry()
-
+    fetchProductsWithRetry();
+    
     // Parse URL parameters
-    const params = new URLSearchParams(location.search)
-    const categoryParam = params.get('category')
-    const searchParam = params.get('search')
-
+    const params = new URLSearchParams(location.search);
+    const categoryParam = params.get('category');
+    const searchParam = params.get('search');
+    
     if (categoryParam && categories.includes(categoryParam)) {
-      setSelectedCategory(categoryParam)
+      setSelectedCategory(categoryParam);
     }
-
+    
     if (searchParam) {
-      setSearchQuery(searchParam)
+      setSearchQuery(searchParam);
     }
 
     // Subscribe to product changes
     const productsSubscription = supabase
       .channel('products-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products',
-        },
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'products' 
+        }, 
         () => {
-          fetchProductsWithRetry()
-        },
+          fetchProductsWithRetry();
+        }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(productsSubscription)
-    }
-  }, [location.search])
+      supabase.removeChannel(productsSubscription);
+    };
+  }, [location.search]);
 
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const fetchProductsWithRetry = async (retryCount = 0) => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Check if we have a valid session first
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
-
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
       if (sessionError) {
-        console.error('Session check error:', sessionError)
+        console.error('Session check error:', sessionError);
       }
 
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) {
         // Network or connection errors
         if (error.code === 'PGRST301' || error.message?.includes('Failed to fetch')) {
           if (retryCount < MAX_RETRIES) {
-            console.log(`Retrying fetch attempt ${retryCount + 1} of ${MAX_RETRIES}...`)
-            await delay(RETRY_DELAY * (retryCount + 1))
-            return fetchProductsWithRetry(retryCount + 1)
+            console.log(`Retrying fetch attempt ${retryCount + 1} of ${MAX_RETRIES}...`);
+            await delay(RETRY_DELAY * (retryCount + 1));
+            return fetchProductsWithRetry(retryCount + 1);
           }
-          console.error('Max retries reached, using fallback data')
-          setProducts(fallbackProducts)
-          setUsesFallback(true)
-          setError('Unable to connect to the server. Showing offline product data.')
-          return
+          console.error('Max retries reached, using fallback data');
+          setProducts(fallbackProducts);
+          setUsesFallback(true);
+          setError('Unable to connect to the server. Showing offline product data.');
+          return;
         }
-
+        
         // Authentication errors
         if (error.code === 'JWT_INVALID') {
-          console.error('Authentication error:', error)
-          setProducts(fallbackProducts)
-          setUsesFallback(true)
-          return
+          console.error('Authentication error:', error);
+          setProducts(fallbackProducts);
+          setUsesFallback(true);
+          return;
         }
 
-        throw error
+        throw error;
       }
-
+      
       if (data && data.length > 0) {
-        setProducts(data)
-        setUsesFallback(false)
-        setError(null)
+        setProducts(data);
+        setUsesFallback(false);
+        setError(null);
       } else {
-        console.log('No products found in database, using fallback data')
-        setProducts(fallbackProducts)
-        setUsesFallback(true)
+        console.log('No products found in database, using fallback data');
+        setProducts(fallbackProducts);
+        setUsesFallback(true);
       }
     } catch (error) {
-      console.error('Error fetching products:', error)
-      setError('Unable to load products. Please check your connection and try again.')
-      setProducts(fallbackProducts)
-      setUsesFallback(true)
+      console.error('Error fetching products:', error);
+      setError('Unable to load products. Please check your connection and try again.');
+      setProducts(fallbackProducts);
+      setUsesFallback(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === 'All Categories' || product.category === selectedCategory
-    const matchesLocation =
-      selectedLocation === 'All Locations' || product.shipping_location === selectedLocation
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesLocation && matchesSearch
-  })
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory === 'All Categories' || 
+      product.category === selectedCategory;
+    const matchesLocation = selectedLocation === 'All Locations' ||
+      product.shipping_location === selectedLocation;
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesLocation && matchesSearch;
+  });
 
   return (
     <>
@@ -162,8 +155,8 @@ export function Home() {
           <div className="bg-primary-orange text-white py-2">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-center sm:justify-end space-x-4 text-sm">
-                <a
-                  href="tel:+2347060438205"
+                <a 
+                  href="tel:+2347060438205" 
                   className="flex items-center hover:text-white/90 transition-colors"
                 >
                   <Phone className="h-4 w-4 mr-2" />
@@ -195,8 +188,8 @@ export function Home() {
                           key={category}
                           className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
                           onClick={() => {
-                            setSelectedCategory(category)
-                            setShowCategories(false)
+                            setSelectedCategory(category);
+                            setShowCategories(false);
                           }}
                         >
                           {category}
@@ -222,8 +215,8 @@ export function Home() {
                           key={loc}
                           className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
                           onClick={() => {
-                            setSelectedLocation(loc)
-                            setShowLocations(false)
+                            setSelectedLocation(loc);
+                            setShowLocations(false);
                           }}
                         >
                           {loc}
@@ -232,7 +225,7 @@ export function Home() {
                     </div>
                   )}
                 </div>
-
+                
                 <div className="flex-1 relative">
                   <input
                     type="text"
@@ -273,8 +266,7 @@ export function Home() {
                 <div className="flex">
                   <div className="ml-3">
                     <p className="text-sm text-yellow-700">
-                      Currently showing demo products. Admin products will appear here once
-                      uploaded.
+                      Currently showing demo products. Admin products will appear here once uploaded.
                     </p>
                   </div>
                 </div>
@@ -298,18 +290,6 @@ export function Home() {
                     <p className="text-gray-500">No products found matching your criteria.</p>
                   </div>
                 )}
-
-                {/* Recently Viewed Section */}
-                {recentlyViewed.length > 0 && (
-                  <div className="mt-12">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Recently Viewed</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {recentlyViewed.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -317,41 +297,22 @@ export function Home() {
 
         <footer className="bg-gray-900 text-white mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="hidden md:block mb-8">
-             
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
                 <h3 className="text-lg font-semibold mb-4">About UlishaStore</h3>
                 <p className="text-gray-400 text-sm">
-                  Your one-stop shop for fashion, accessories, shoes, and smart devices. We bring
-                  you the best quality products at competitive prices.
+                  Your one-stop shop for fashion, accessories, shoes, and smart devices. We bring you the
+                  best quality products at competitive prices.
                 </p>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
                 <ul className="space-y-2 text-gray-400">
-                  <li>
-                    <Link to="/" className="hover:text-primary-orange transition-colors">
-                      Home
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/about" className="hover:text-primary-orange transition-colors">
-                      About Us
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/terms" className="hover:text-primary-orange transition-colors">
-                      Terms & Conditions
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/returns" className="hover:text-primary-orange transition-colors">
-                      Return Policy
-                    </Link>
-                  </li>
+                  <li><Link to="/" className="hover:text-primary-orange transition-colors">Home</Link></li>
+                  <li><Link to="/about" className="hover:text-primary-orange transition-colors">About Us</Link></li>
+                  <li><Link to="/terms" className="hover:text-primary-orange transition-colors">Terms & Conditions</Link></li>
+                  <li><Link to="/returns" className="hover:text-primary-orange transition-colors">Return Policy</Link></li>
                 </ul>
               </div>
 
@@ -367,36 +328,20 @@ export function Home() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
                 <div className="flex space-x-4">
-                  <a
-                    href="https://www.facebook.com/share/1AhYhxox4X/?mibextid=wwXIfr"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary-orange transition-colors"
-                  >
+                  <a href="https://www.facebook.com/share/1AhYhxox4X/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" 
+                     className="hover:text-primary-orange transition-colors">
                     <Facebook className="w-6 h-6" />
                   </a>
-                  <a
-                    href="https://x.com/ulishastores"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary-orange transition-colors"
-                  >
+                  <a href="https://x.com/ulishastores" target="_blank" rel="noopener noreferrer"
+                     className="hover:text-primary-orange transition-colors">
                     <Twitter className="w-6 h-6" />
                   </a>
-                  <a
-                    href="https://www.instagram.com/ulisha_store?"
-                    target="Ulishastore"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary-orange transition-colors"
-                  >
+                  <a href="https://www.instagram.com/ulisha_store?" target="Ulishastore" rel="noopener noreferrer"
+                     className="hover:text-primary-orange transition-colors">
                     <Instagram className="w-6 h-6" />
                   </a>
-                  <a
-                    href="https://www.tiktok.com/@ulishastores"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary-orange transition-colors"
-                  >
+                  <a href="https://www.tiktok.com/@ulishastores" target="_blank" rel="noopener noreferrer"
+                     className="hover:text-primary-orange transition-colors">
                     <Youtube className="w-6 h-6" />
                   </a>
                 </div>
@@ -410,5 +355,5 @@ export function Home() {
         </footer>
       </div>
     </>
-  )
+  );
 }

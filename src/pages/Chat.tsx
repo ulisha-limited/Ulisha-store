@@ -1,79 +1,77 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Send, User } from 'lucide-react'
-import { useAuthStore } from '../store/authStore'
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, User } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
 
 export function Chat() {
-  const [messages, setMessages] = useState<
-    Array<{
-      id: string
-      text: string
-      sender: 'user' | 'support'
-      timestamp: Date
-    }>
-  >([
+  const [messages, setMessages] = useState<Array<{
+    id: string;
+    text: string;
+    sender: 'user' | 'support';
+    timestamp: Date;
+  }>>([
     {
       id: '1',
       text: 'Hello! Welcome to Ulisha Store support. How can I help you today?',
       sender: 'support',
-      timestamp: new Date(),
-    },
-  ])
-
-  const [newMessage, setNewMessage] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const user = useAuthStore((state) => state.user)
-
+      timestamp: new Date()
+    }
+  ]);
+  
+  const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const user = useAuthStore((state) => state.user);
+  
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
+    scrollToBottom();
+  }, [messages]);
+  
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
   const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!newMessage.trim()) return
-
+    e.preventDefault();
+    
+    if (!newMessage.trim()) return;
+    
     // Add user message
     const userMessage = {
       id: Date.now().toString(),
       text: newMessage,
       sender: 'user' as const,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setNewMessage('')
-
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setNewMessage('');
+    
     // Simulate support response after a delay
     setTimeout(() => {
       const supportResponses = [
-        'Thank you for your message. Our team will get back to you shortly.',
-        'I understand your concern. Let me check that for you.',
-        'We appreciate your patience. Is there anything else I can help you with?',
+        "Thank you for your message. Our team will get back to you shortly.",
+        "I understand your concern. Let me check that for you.",
+        "We appreciate your patience. Is there anything else I can help you with?",
         "I'll make sure this is addressed right away.",
-        'Thank you for shopping with Ulisha Store. We value your feedback.',
-      ]
-
-      const randomResponse = supportResponses[Math.floor(Math.random() * supportResponses.length)]
-
+        "Thank you for shopping with Ulisha Store. We value your feedback."
+      ];
+      
+      const randomResponse = supportResponses[Math.floor(Math.random() * supportResponses.length)];
+      
       const supportMessage = {
         id: (Date.now() + 1).toString(),
         text: randomResponse,
         sender: 'support' as const,
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, supportMessage])
-    }, 1000)
-  }
-
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, supportMessage]);
+    }, 1000);
+  };
+  
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,18 +81,18 @@ export function Chat() {
             <h2 className="text-xl font-semibold">Chat Support</h2>
             <p className="text-sm opacity-80">We typically reply within a few minutes</p>
           </div>
-
+          
           {/* Chat messages */}
           <div className="h-[500px] overflow-y-auto p-4 bg-gray-50">
-            {messages.map((message) => (
-              <div
+            {messages.map(message => (
+              <div 
                 key={message.id}
                 className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div
+                <div 
                   className={`max-w-[80%] rounded-lg p-3 ${
-                    message.sender === 'user'
-                      ? 'bg-[#007BFF] text-white rounded-tr-none'
+                    message.sender === 'user' 
+                      ? 'bg-[#007BFF] text-white rounded-tr-none' 
                       : 'bg-white border rounded-tl-none'
                   }`}
                 >
@@ -104,9 +102,7 @@ export function Chat() {
                     ) : (
                       <span className="text-xs font-medium text-gray-100">You</span>
                     )}
-                    <span
-                      className={`text-xs ml-2 ${message.sender === 'user' ? 'text-gray-200' : 'text-gray-400'}`}
-                    >
+                    <span className={`text-xs ml-2 ${message.sender === 'user' ? 'text-gray-200' : 'text-gray-400'}`}>
                       {formatTime(message.timestamp)}
                     </span>
                   </div>
@@ -118,7 +114,7 @@ export function Chat() {
             ))}
             <div ref={messagesEndRef} />
           </div>
-
+          
           {/* Chat input */}
           <div className="border-t p-4">
             <form onSubmit={handleSendMessage} className="flex items-center">
@@ -138,7 +134,7 @@ export function Chat() {
             </form>
           </div>
         </div>
-
+        
         {/* Contact information */}
         <div className="mt-6 bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Other Ways to Contact Us</h3>
@@ -159,5 +155,5 @@ export function Chat() {
         </div>
       </div>
     </div>
-  )
+  );
 }
