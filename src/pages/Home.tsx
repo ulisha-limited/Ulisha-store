@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import type { Product } from '../types'
 import { useLocation, Link } from 'react-router-dom'
 import { fallbackProducts } from '../lib/supabase'
-import { useRecentlyViewedStore } from '../stores/recentlyViewedStore'
+import { useRecentlyViewedStore } from '../store/recentlyViewedStore'
 
 const categories = [
   'All Categories',
