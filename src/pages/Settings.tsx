@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Product } from '../types';
-import {
-  Star,
-  ShoppingCart,
-  Phone,
-  Share2,
-  Copy,
-  Check,
-  Plane
-} from 'lucide-react';
+import { Star, ShoppingCart, Phone, Share2, Copy, Check, MapPin, Plane } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -39,16 +31,16 @@ export function ProductCard({ product }: { product: Product }) {
     };
   }, []);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number): string => {
     if (currency === 'USD') {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD'
+        currency: 'USD',
       }).format(price / 1630);
     }
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
-      currency: 'NGN'
+      currency: 'NGN',
     }).format(price);
   };
 
@@ -67,20 +59,25 @@ export function ProductCard({ product }: { product: Product }) {
     }
   };
 
+  const handleCallSeller = () => {
+    if (product.seller_phone) {
+      window.location.href = `tel:${product.seller_phone}`;
+    }
+  };
+
   const getProductLink = () => {
     return `https://ulishastore.com/product/${product.id}`;
   };
 
   const copyToClipboard = () => {
     const link = getProductLink();
-    navigator.clipboard
-      .writeText(link)
+    navigator.clipboard.writeText(link)
       .then(() => {
         setLinkCopied(true);
         showNotification('Link copied to clipboard!', 'success');
         setTimeout(() => setLinkCopied(false), 2000);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('Failed to copy link: ', err);
         showNotification('Failed to copy link', 'error');
       });
@@ -157,17 +154,11 @@ export function ProductCard({ product }: { product: Product }) {
         {showShareOptions && (
           <div className="absolute bottom-12 right-2 bg-white rounded-lg shadow-lg p-2 z-20">
             <div className="flex flex-col space-y-1">
-              <button
-                onClick={() => shareToSocial('facebook')}
-                className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap"
-              >
+              <button onClick={() => shareToSocial('facebook')} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
                 <div className="w-5 h-5 bg-blue-600 text-white flex items-center justify-center rounded-full">f</div>
                 <span>Facebook</span>
               </button>
-              <button
-                onClick={() => shareToSocial('twitter')}
-                className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap"
-              >
+              <button onClick={() => shareToSocial('twitter')} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
                 <div className="w-5 h-5 bg-blue-400 text-white flex items-center justify-center rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
@@ -175,10 +166,7 @@ export function ProductCard({ product }: { product: Product }) {
                 </div>
                 <span>Twitter</span>
               </button>
-              <button
-                onClick={() => shareToSocial('whatsapp')}
-                className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap"
-              >
+              <button onClick={() => shareToSocial('whatsapp')} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
                 <div className="w-5 h-5 bg-green-500 text-white flex items-center justify-center rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
@@ -186,10 +174,7 @@ export function ProductCard({ product }: { product: Product }) {
                 </div>
                 <span>WhatsApp</span>
               </button>
-              <button
-                onClick={copyToClipboard}
-                className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap"
-              >
+              <button onClick={copyToClipboard} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
                 {linkCopied ? (
                   <>
                     <Check className="w-5 h-5 text-green-500" />
@@ -213,10 +198,7 @@ export function ProductCard({ product }: { product: Product }) {
             {product.category}
           </span>
         </div>
-        <h3
-          className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 min-h-[2.5rem] cursor-pointer hover:text-primary-orange"
-          onClick={() => navigate(`/product/${product.id}`)}
-        >
+        <h3 onClick={() => navigate(`/product/${product.id}`)} className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 min-h-[2.5rem] cursor-pointer hover:text-primary-orange">
           {product.name}
         </h3>
         <div className="flex items-center mb-2">
