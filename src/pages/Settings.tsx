@@ -85,7 +85,7 @@ export function Settings() {
                   </div>
 
                   <p className="mt-2 text-sm text-gray-500">
-                    Current exchange rate: 1 USD = ₦1,610
+                    Current exchange rate: 1 USD = ₦1,630
                   </p>
 
                   <div className="mt-4">
