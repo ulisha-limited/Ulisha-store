@@ -1,188 +1,221 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { Loader, Phone, ShoppingBag, ChevronLeft } from 'lucide-react';
-import { ProductCard } from '../components/ProductCard';
-import type { Store, Product } from '../types';
+import type { Product } from '../types';
+import { Star, ShoppingCart, Phone, Share2, Copy, Check, MapPin, Plane } from 'lucide-react';
+import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
-export function StoreDetails() {
-  const { storeId } = useParams<{ storeId: string }>();
-  const [loading, setLoading] = useState(true);
-  const [store, setStore] = useState<Store | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+export function ProductCard({ product }: { product: Product }) {
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [currency, setCurrency] = useState<'NGN' | 'USD'>('NGN');
+
+  const addToCart = useCartStore((state) => state.addToCart);
+  const isLoggedIn = useAuthStore((state) => !!state.user);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (storeId) {
-      fetchStoreDetails();
+    const savedCurrency = localStorage.getItem('currency') as 'NGN' | 'USD';
+    if (savedCurrency) {
+      setCurrency(savedCurrency);
     }
-  }, [storeId]);
 
-  const fetchStoreDetails = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch store details
-      const { data: storeData, error: storeError } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('id', storeId)
-        .single();
-      
-      if (storeError) throw storeError;
-      setStore(storeData);
-      
-      // Fetch store products
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store_id', storeId)
-        .order('created_at', { ascending: false });
-      
-      if (productsError) throw productsError;
-      setProducts(productsData || []);
-      
-      // Extract unique categories
-      const uniqueCategories = [...new Set(productsData?.map(product => product.category) || [])];
-      setCategories(uniqueCategories);
-      
-    } catch (error) {
-      console.error('Error fetching store details:', error);
-    } finally {
-      setLoading(false);
+    const handleCurrencyChange = (e: CustomEvent) => {
+      setCurrency(e.detail.currency);
+    };
+
+    window.addEventListener('currencyChange', handleCurrencyChange as EventListener);
+
+    return () => {
+      window.removeEventListener('currencyChange', handleCurrencyChange as EventListener);
+    };
+  }, []);
+
+  const formatPrice = (price: number): string => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(price / 1630);
     }
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+    }).format(price);
   };
 
-  const filteredProducts = selectedCategory
-    ? products.filter(product => product.category === selectedCategory)
-    : products;
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await addToCart(product);
+      showNotification('Product added to cart!', 'success');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      showNotification('Failed to add product to cart. Please try again.', 'error');
+    }
+  };
 
   const handleCallSeller = () => {
-    if (store?.phone) {
-      window.location.href = `tel:${store.phone}`;
+    if (product.seller_phone) {
+      window.location.href = `tel:${product.seller_phone}`;
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="w-8 h-8 animate-spin text-primary-orange" />
-      </div>
-    );
-  }
+  const getProductLink = () => {
+    return `https://ulishastore.com/product/${product.id}`;
+  };
 
-  if (!store) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Store not found</h2>
-          <p className="text-gray-600 mb-4">The store you're looking for doesn't exist or has been removed</p>
-          <Link to="/" className="text-primary-orange hover:text-primary-orange/90 font-medium">
-            Go back to home
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const copyToClipboard = () => {
+    const link = getProductLink();
+    navigator.clipboard.writeText(link)
+      .then(() => {
+        setLinkCopied(true);
+        showNotification('Link copied to clipboard!', 'success');
+        setTimeout(() => setLinkCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy link: ', err);
+        showNotification('Failed to copy link', 'error');
+      });
+  };
+
+  const shareToSocial = (platform: 'facebook' | 'twitter' | 'whatsapp') => {
+    const link = getProductLink();
+    const text = `Check out this product: ${product.name}`;
+    let shareUrl = '';
+
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(`${text} ${link}`)}`;
+        break;
+    }
+
+    window.open(shareUrl, '_blank');
+    setShowShareOptions(false);
+  };
+
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 right-4 ${
+      type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.classList.add('animate-fade-out');
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 3000);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Store Banner */}
-      <div className="h-64 bg-cover bg-center relative" style={{ backgroundImage: `url(${store.banner})` }}>
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        <div className="absolute top-4 left-4">
-          <Link to="/" className="bg-white bg-opacity-80 p-2 rounded-full hover:bg-opacity-100 transition-all">
-            <ChevronLeft className="h-5 w-5 text-gray-800" />
-          </Link>
-        </div>
-      </div>
-      
-      {/* Store Info */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <img src={store.logo} alt={store.name} className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{store.name}</h1>
-              <p className="text-gray-600 mt-1">{store.description}</p>
-              <div className="flex items-center mt-2 text-sm text-gray-500">
-                <span>{store.address}</span>
-              </div>
-            </div>
-            <button
-              onClick={handleCallSeller}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full flex items-center space-x-2 transition-colors"
-            >
-              <Phone className="h-5 w-5" />
-              <span>Call Seller</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Categories */}
-      {categories.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-          <div className="bg-white rounded-lg shadow-md p-4 overflow-x-auto">
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-                  selectedCategory === null
-                    ? 'bg-primary-orange text-white'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                }`}
-              >
-                All Products
-              </button>
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-                    selectedCategory === category
-                      ? 'bg-primary-orange text-white'
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Products */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">
-            {selectedCategory ? selectedCategory : 'All Products'}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-          </p>
-        </div>
-        
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-500">
-              {selectedCategory
-                ? `This store doesn't have any products in the ${selectedCategory} category yet.`
-                : "This store doesn't have any products yet."}
-            </p>
+    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group overflow-hidden">
+      <div className="relative pb-[100%] overflow-hidden rounded-t-lg">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="absolute top-0 left-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-200 cursor-pointer"
+          onClick={() => navigate(`/product/${product.id}`)}
+        />
+
+        {product.discount_active && product.discount_percentage > 0 && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+            -{product.discount_percentage}%
           </div>
         )}
+
+        {product.shipping_location === 'Abroad' && (
+          <div className="absolute top-2 right-2 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-medium flex items-center">
+            <Plane className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
+            <span className="hidden xs:inline">Shipped from abroad</span>
+            <span className="xs:hidden">From Abroad</span>
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowShareOptions(!showShareOptions)}
+          className="absolute bottom-2 right-2 bg-white bg-opacity-80 p-2 rounded-full hover:bg-opacity-100 transition-all z-10"
+        >
+          <Share2 className="w-4 h-4 text-gray-700" />
+        </button>
+
+        {showShareOptions && (
+          <div className="absolute bottom-12 right-2 bg-white rounded-lg shadow-lg p-2 z-20">
+            <div className="flex flex-col space-y-1">
+              <button onClick={() => shareToSocial('facebook')} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
+                <div className="w-5 h-5 bg-blue-600 text-white flex items-center justify-center rounded-full">f</div>
+                <span>Facebook</span>
+              </button>
+              <button onClick={() => shareToSocial('twitter')} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
+                <div className="w-5 h-5 bg-blue-400 text-white flex items-center justify-center rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+                  </svg>
+                </div>
+                <span>Twitter</span>
+              </button>
+              <button onClick={() => shareToSocial('whatsapp')} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
+                <div className="w-5 h-5 bg-green-500 text-white flex items-center justify-center rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                  </svg>
+                </div>
+                <span>WhatsApp</span>
+              </button>
+              <button onClick={copyToClipboard} className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 rounded-md text-sm whitespace-nowrap">
+                {linkCopied ? (
+                  <>
+                    <Check className="w-5 h-5 text-green-500" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5 text-gray-500" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-3">
+        <div className="mb-1">
+          <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+            {product.category}
+          </span>
+        </div>
+        <h3 onClick={() => navigate(`/product/${product.id}`)} className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 min-h-[2.5rem] cursor-pointer hover:text-primary-orange">
+          {product.name}
+        </h3>
+        <div className="flex items-center mb-2">
+          <div className="flex items-center text-orange-400">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className={`w-3 h-3 ${(product.rating || 5) > i ? 'fill-current' : 'text-gray-300'}`} />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-baseline space-x-2">
+            <div className="text-base font-bold text-gray-900">{formatPrice(product.price)}</div>
+            {product.discount_active && product.original_price && (
+              <div className="text-xs text-gray-500 line-through">{formatPrice(product.original_price)}</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
