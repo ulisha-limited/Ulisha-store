@@ -20,6 +20,8 @@ export function Cart() {
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   
+  const canCheckout = items.length >= 2; // Minimum 2 items required for checkout
+  
   // Delivery details state
   const [deliveryDetails, setDeliveryDetails] = useState({
     name: '',
@@ -479,29 +481,67 @@ export function Cart() {
                   </div>
                 </div>
                 
-                <FlutterwavePayment
-                  amount={total}
-                  onSuccess={handleFlutterwaveSuccess}
-                  onClose={handleFlutterwaveClose}
-                  customerInfo={{
-                    name: deliveryDetails.name,
-                    email: user?.email || '',
-                    phone: deliveryDetails.phone
-                  }}
-                  disabled={
-                    !deliveryDetails.name || 
-                    !deliveryDetails.phone || 
-                    !deliveryDetails.address ||
-                    !deliveryDetails.state ||
-                    checkoutLoading
-                  }
-                  orderId={orderId}
-                  onInit={handleFlutterwaveInit}
-                  className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  <span>{checkoutLoading ? 'Processing...' : 'Pay with Flutterwave'}</span>
-                </FlutterwavePayment>
+                <div className="flex flex-col space-y-4">
+                  <FlutterwavePayment
+                    amount={total}
+                    onSuccess={handleFlutterwaveSuccess}
+                    onClose={handleFlutterwaveClose}
+                    customerInfo={{
+                      name: deliveryDetails.name,
+                      email: user?.email || '',
+                      phone: deliveryDetails.phone
+                    }}
+                    disabled={
+                      !deliveryDetails.name || 
+                      !deliveryDetails.phone || 
+                      !deliveryDetails.address ||
+                      !deliveryDetails.state ||
+                      checkoutLoading ||
+                      !canCheckout
+                    }
+                    orderId={orderId}
+                    onInit={handleFlutterwaveInit}
+                    className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    <span>{checkoutLoading ? 'Processing...' : 'Pay with Flutterwave'}</span>
+                  </FlutterwavePayment>
+
+                  <button
+                    onClick={() => {
+                      // Crypto payment logic will go here
+                      window.location.href = `https://commerce.coinbase.com/checkout/YOUR-CHECKOUT-ID?amount=${total}`;
+                    }}
+                    disabled={
+                      !deliveryDetails.name || 
+                      !deliveryDetails.phone || 
+                      !deliveryDetails.address ||
+                      !deliveryDetails.state ||
+                      checkoutLoading ||
+                      !canCheckout
+                    }
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg 
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727" />
+                    </svg>
+                    <span>Pay with Crypto</span>
+                  </button>
+
+                  {!canCheckout && items.length > 0 && (
+                    <p className="text-sm text-red-600 text-center">
+                      Minimum 2 items required to checkout
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
