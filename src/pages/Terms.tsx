@@ -1,4 +1,3 @@
-import React from 'react';
 import { Shield } from 'lucide-react';
 
 export function Terms() {
@@ -100,3 +99,5 @@ export function Terms() {
     </div>
   );
 }
+
+export default Terms;
