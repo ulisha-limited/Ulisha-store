@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ulishastore",
+      "sha256_cert_fingerprints": ["A1:F1:7E:DD:7B:FB:47:0E:B1:D1:C0:B3:F8:4F:EF:44:88:36:68:6D:59:8C:D1:42:8E:83:9E:A0:E7:29:1F:E0"]
+    }
+  }
+]
