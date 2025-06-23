@@ -49,9 +49,9 @@ export function AdCarousel({ className = '' }: AdCarouselProps) {
       setIsLoading(true);
       setError(null);
 
-      // Verify Supabase URL is configured
-      if (!supabase.supabaseUrl) {
-        throw new Error('Supabase URL is not configured');
+      // Optionally, you can check if supabase is defined or handle errors from the client itself
+      if (!supabase) {
+        throw new Error('Supabase client is not configured');
       }
 
       const { data, error: supabaseError } = await supabase
@@ -82,7 +82,7 @@ export function AdCarousel({ className = '' }: AdCarouselProps) {
       let errorMessage = 'Unable to load advertisements. ';
       if (!checkNetworkConnectivity()) {
         errorMessage += 'Please check your internet connection.';
-      } else if (!supabase.supabaseUrl) {
+      } else if (!supabase) {
         errorMessage += 'Supabase configuration is missing.';
       } else if (error instanceof Error) {
         errorMessage += `Error: ${error.message}`;
