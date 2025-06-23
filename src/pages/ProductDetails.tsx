@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Loader, ShoppingCart, Star, Phone, ChevronLeft, Share2, Copy, Check, Percent } from 'lucide-react';
+import { Loader, ShoppingCart, Star, Phone, ChevronLeft, Copy, Check, Percent } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import type { Product } from '../types';
@@ -355,7 +355,7 @@ export function ProductDetails() {
                   className="w-full h-full object-cover"
                 />
                 
-                {product.discount_active && product.discount_percentage > 0 && (
+                {product.discount_active && (product.discount_percentage ?? 0) > 0 && (
                   <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full flex items-center space-x-1">
                     <Percent className="w-4 h-4" />
                     <span className="font-bold">{product.discount_percentage}% OFF</span>

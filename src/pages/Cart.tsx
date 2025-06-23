@@ -189,8 +189,7 @@ export function Cart() {
         .then(() => {
           setOrderId(null);
           console.log('Pending order deleted');
-        })
-        .catch(error => {
+        }, (error: any) => {
           console.error('Error deleting pending order:', error);
         });
     }

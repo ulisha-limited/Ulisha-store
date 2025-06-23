@@ -61,7 +61,7 @@ export function OtpInput({
     // Auto-focus next input
     if (val && index < length - 1) {
       if (inputRefs.current[index + 1]) {
-        inputRefs.current[index + 1].focus();
+        inputRefs.current[index + 1]?.focus();
       }
     }
     
@@ -80,7 +80,7 @@ export function OtpInput({
       if (!value[index] && index > 0) {
         // If current input is empty, focus previous input
         if (inputRefs.current[index - 1]) {
-          inputRefs.current[index - 1].focus();
+          inputRefs.current[index - 1]?.focus();
         }
       } else {
         // Clear current input
@@ -93,14 +93,14 @@ export function OtpInput({
     // Handle left arrow
     if (e.key === 'ArrowLeft' && index > 0) {
       if (inputRefs.current[index - 1]) {
-        inputRefs.current[index - 1].focus();
+        inputRefs.current[index - 1]?.focus();
       }
     }
     
     // Handle right arrow
     if (e.key === 'ArrowRight' && index < length - 1) {
       if (inputRefs.current[index + 1]) {
-        inputRefs.current[index + 1].focus();
+        inputRefs.current[index + 1]?.focus();
       }
     }
   };
