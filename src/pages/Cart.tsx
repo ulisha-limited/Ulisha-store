@@ -498,7 +498,7 @@ export function Cart() {
                       checkoutLoading ||
                       !canCheckout
                     }
-                    orderId={orderId}
+                    orderId={orderId ?? undefined}
                     onInit={handleFlutterwaveInit}
                     className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

@@ -40,7 +40,7 @@ export function FlutterwavePayment({
     payment_options: 'card,mobilemoney,ussd',
     customer: {
       email: customerInfo.email || user?.email || '',
-      phone_number: customerInfo.phone || '',
+      phone_number: customerInfo.phone || user?.phone || '',
       name: customerInfo.name || user?.user_metadata?.full_name || '',
     },
     customizations: {
