@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Bell, Lock, User, Shield, Eye, EyeOff, Mail, Phone } from 'lucide-react';
+import { DollarSign, Bell, Lock, User, Shield, Eye, EyeOff, Mail } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useCurrencyStore } from '../store/currencyStore';
 import { supabase } from '../lib/supabase';
 import { OtpInput } from '../components/OtpInput';
-import { EmailOTPService, OTPService } from '../lib/firebase';
 
 export function Settings() {
   const [loading, setLoading] = useState(false);
@@ -15,8 +14,6 @@ export function Settings() {
   });
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
-  const [otpMethod, setOtpMethod] = useState<'email' | 'phone'>('email');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -39,30 +36,9 @@ export function Settings() {
   const user = useAuthStore((state) => state.user);
   const { currency, setCurrency, loading: currencyLoading, initialize } = useCurrencyStore();
 
-  // OTP Services
-  const [emailOTPService] = useState(() => new EmailOTPService());
-  const [phoneOTPService] = useState(() => new OTPService());
-
   useEffect(() => {
     loadUserPreferences();
     initialize();
-
-    // Initialize reCAPTCHA for phone OTP
-    const initRecaptcha = async () => {
-      try {
-        await phoneOTPService.initializeRecaptcha();
-      } catch (error) {
-        console.error('Failed to initialize reCAPTCHA:', error);
-      }
-    };
-
-    initRecaptcha();
-
-    // Cleanup on unmount
-    return () => {
-      emailOTPService.cleanup();
-      phoneOTPService.cleanup();
-    };
   }, [user, initialize]);
 
   // Countdown timer for OTP resend
@@ -133,7 +109,7 @@ export function Settings() {
           order_updates: updates.orderUpdates,
           promotions: updates.promotions,
           security_alerts: updates.security,
-          currency: currency
+          currency: currency // Include current currency
         });
 
       if (error) throw error;
@@ -162,15 +138,20 @@ export function Settings() {
         throw new Error('New password must be at least 6 characters long');
       }
 
-      if (otpMethod === 'email') {
-        await emailOTPService.sendEmailOTP(user.email!);
-        showNotification('Verification code sent to your email address', 'success');
-      } else {
-        if (!phoneNumber) {
-          throw new Error('Please enter your phone number');
+      // Send OTP using Supabase's signInWithOtp for verification
+      const { error } = await supabase.auth.signInWithOtp({
+        email: user.email!,
+        options: {
+          shouldCreateUser: false, // Don't create new user
+          data: {
+            purpose: 'password_change_verification'
+          }
         }
-        await phoneOTPService.sendOTP(phoneNumber);
-        showNotification('Verification code sent to your phone number', 'success');
+      });
+
+      if (error) {
+        console.error('OTP send error:', error);
+        throw new Error('Failed to send verification code. Please try again.');
       }
 
       setShowOtpVerification(true);
@@ -181,6 +162,7 @@ export function Settings() {
         countdown: 60
       });
 
+      showNotification('Verification code sent to your email address', 'success');
     } catch (error: any) {
       console.error('Error sending OTP:', error);
       showNotification(error.message || 'Failed to send verification code', 'error');
@@ -202,16 +184,16 @@ export function Settings() {
         throw new Error('Please enter the complete 6-digit verification code');
       }
 
-      // Verify the OTP based on method
-      let isVerified = false;
-      if (otpMethod === 'email') {
-        isVerified = await emailOTPService.verifyEmailOTP(user.email!, otpCode);
-      } else {
-        isVerified = await phoneOTPService.verifyOTP(otpCode);
-      }
+      // Verify the OTP token
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email: user.email!,
+        token: otpCode,
+        type: 'email'
+      });
 
-      if (!isVerified) {
-        throw new Error('Invalid verification code. Please try again.');
+      if (verifyError) {
+        console.error('OTP verification error:', verifyError);
+        throw new Error('Invalid or expired verification code. Please try again.');
       }
 
       // If OTP is valid, update the password
@@ -236,7 +218,6 @@ export function Settings() {
         canResend: false,
         countdown: 60
       });
-      setPhoneNumber('');
       setShowChangePassword(false);
       setShowOtpVerification(false);
 
@@ -256,15 +237,20 @@ export function Settings() {
       setLoading(true);
       setError(null);
 
-      if (otpMethod === 'email') {
-        await emailOTPService.sendEmailOTP(user.email!);
-        showNotification('New verification code sent to your email', 'success');
-      } else {
-        if (!phoneNumber) {
-          throw new Error('Please enter your phone number');
+      // Resend OTP using the same method
+      const { error } = await supabase.auth.signInWithOtp({
+        email: user.email!,
+        options: {
+          shouldCreateUser: false,
+          data: {
+            purpose: 'password_change_verification'
+          }
         }
-        await phoneOTPService.sendOTP(phoneNumber);
-        showNotification('New verification code sent to your phone', 'success');
+      });
+
+      if (error) {
+        console.error('OTP resend error:', error);
+        throw new Error('Failed to resend verification code. Please try again.');
       }
 
       setOtpData(prev => ({
@@ -274,6 +260,7 @@ export function Settings() {
         otp: ['', '', '', '', '', '']
       }));
 
+      showNotification('New verification code sent to your email', 'success');
     } catch (error: any) {
       console.error('Error resending OTP:', error);
       showNotification(error.message || 'Failed to resend verification code', 'error');
@@ -309,12 +296,7 @@ export function Settings() {
       canResend: false,
       countdown: 60
     });
-    setPhoneNumber('');
     setError(null);
-    
-    // Cleanup OTP services
-    emailOTPService.cleanup();
-    phoneOTPService.cleanup();
   };
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -334,9 +316,6 @@ export function Settings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hidden reCAPTCHA container */}
-      <div id="recaptcha-container"></div>
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Notifications */}
@@ -484,7 +463,7 @@ export function Settings() {
                     <Lock className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="font-medium text-gray-900">Password</p>
-                      <p className="text-sm text-gray-500">Change your account password with OTP verification</p>
+                      <p className="text-sm text-gray-500">Change your account password with email verification</p>
                     </div>
                   </div>
                   <button
@@ -501,7 +480,7 @@ export function Settings() {
                       <div className="flex items-center">
                         <Shield className="w-5 h-5 text-blue-600 mr-2" />
                         <p className="text-sm text-blue-800">
-                          For your security, we'll send a verification code before changing your password.
+                          For your security, we'll send a verification code to your email before changing your password.
                         </p>
                       </div>
                     </div>
@@ -580,61 +559,6 @@ export function Settings() {
                         </div>
                       </div>
 
-                      {/* OTP Method Selection */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">Verification Method</label>
-                        <div className="flex space-x-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="otpMethod"
-                              value="email"
-                              checked={otpMethod === 'email'}
-                              onChange={(e) => setOtpMethod(e.target.value as 'email' | 'phone')}
-                              className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300"
-                            />
-                            <span className="ml-2 text-sm text-gray-700 flex items-center">
-                              <Mail className="w-4 h-4 mr-1" />
-                              Email ({user?.email})
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="otpMethod"
-                              value="phone"
-                              checked={otpMethod === 'phone'}
-                              onChange={(e) => setOtpMethod(e.target.value as 'email' | 'phone')}
-                              className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300"
-                            />
-                            <span className="ml-2 text-sm text-gray-700 flex items-center">
-                              <Phone className="w-4 h-4 mr-1" />
-                              Phone Number
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Phone Number Input */}
-                      {otpMethod === 'phone' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                          <div className="mt-1">
-                            <input
-                              type="tel"
-                              value={phoneNumber}
-                              onChange={(e) => setPhoneNumber(e.target.value)}
-                              placeholder="+234 or 0801234567"
-                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-orange focus:ring-primary-orange sm:text-sm"
-                              required={otpMethod === 'phone'}
-                            />
-                            <p className="mt-1 text-xs text-gray-500">
-                              Enter your phone number with country code (+234) or starting with 0
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
                       <div className="flex justify-end space-x-3">
                         <button
                           type="button"
@@ -645,10 +569,10 @@ export function Settings() {
                         </button>
                         <button
                           type="submit"
-                          disabled={loading || (otpMethod === 'phone' && !phoneNumber)}
+                          disabled={loading}
                           className="px-4 py-2 bg-primary-orange text-white rounded-md hover:bg-primary-orange/90 disabled:opacity-50 flex items-center space-x-2"
                         >
-                          {otpMethod === 'email' ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
+                          <Mail className="w-4 h-4" />
                           <span>{loading ? 'Sending Code...' : 'Send Verification Code'}</span>
                         </button>
                       </div>
@@ -660,12 +584,9 @@ export function Settings() {
                   <div className="mt-4 space-y-4 border-t pt-4">
                     <div className="bg-green-50 p-4 rounded-md">
                       <div className="flex items-center">
-                        {otpMethod === 'email' ? <Mail className="w-5 h-5 text-green-600 mr-2" /> : <Phone className="w-5 h-5 text-green-600 mr-2" />}
+                        <Mail className="w-5 h-5 text-green-600 mr-2" />
                         <p className="text-sm text-green-800">
-                          We've sent a 6-digit verification code to{' '}
-                          <strong>
-                            {otpMethod === 'email' ? user?.email : phoneNumber}
-                          </strong>
+                          We've sent a 6-digit verification code to <strong>{user?.email}</strong>
                         </p>
                       </div>
                     </div>
