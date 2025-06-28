@@ -138,14 +138,21 @@ export function Settings() {
         throw new Error('New password must be at least 6 characters long');
       }
 
-      // Send OTP to user's email using Supabase Auth
-      const { error } = await supabase.auth.updateUser({
-        email: user.email
-      }, {
-        emailRedirectTo: undefined // This prevents redirect and just sends OTP
+      // Send OTP using Supabase's signInWithOtp for verification
+      const { error } = await supabase.auth.signInWithOtp({
+        email: user.email!,
+        options: {
+          shouldCreateUser: false, // Don't create new user
+          data: {
+            purpose: 'password_change_verification'
+          }
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OTP send error:', error);
+        throw new Error('Failed to send verification code. Please try again.');
+      }
 
       setShowOtpVerification(true);
       setOtpData({
@@ -155,10 +162,10 @@ export function Settings() {
         countdown: 60
       });
 
-      showNotification('OTP sent to your email address', 'success');
+      showNotification('Verification code sent to your email address', 'success');
     } catch (error: any) {
       console.error('Error sending OTP:', error);
-      showNotification(error.message || 'Failed to send OTP', 'error');
+      showNotification(error.message || 'Failed to send verification code', 'error');
     } finally {
       setLoading(false);
     }
@@ -174,27 +181,19 @@ export function Settings() {
       const otpCode = otpData.otp.join('');
       
       if (otpCode.length !== 6) {
-        throw new Error('Please enter the complete 6-digit OTP');
+        throw new Error('Please enter the complete 6-digit verification code');
       }
 
-      // Verify OTP and update password
-      const { error } = await supabase.auth.verifyOtp({
+      // Verify the OTP token
+      const { error: verifyError } = await supabase.auth.verifyOtp({
         email: user.email!,
         token: otpCode,
-        type: 'email_change'
+        type: 'email'
       });
 
-      if (error) {
-        // If email_change verification fails, try with email type
-        const { error: emailError } = await supabase.auth.verifyOtp({
-          email: user.email!,
-          token: otpCode,
-          type: 'email'
-        });
-
-        if (emailError) {
-          throw new Error('Invalid or expired OTP. Please try again.');
-        }
+      if (verifyError) {
+        console.error('OTP verification error:', verifyError);
+        throw new Error('Invalid or expired verification code. Please try again.');
       }
 
       // If OTP is valid, update the password
@@ -202,7 +201,10 @@ export function Settings() {
         password: passwordData.newPassword
       });
 
-      if (passwordError) throw passwordError;
+      if (passwordError) {
+        console.error('Password update error:', passwordError);
+        throw new Error('Failed to update password. Please try again.');
+      }
 
       // Reset all states
       setPasswordData({
@@ -222,7 +224,7 @@ export function Settings() {
       showNotification('Password updated successfully', 'success');
     } catch (error: any) {
       console.error('Error verifying OTP and updating password:', error);
-      showNotification(error.message || 'Failed to verify OTP and update password', 'error');
+      showNotification(error.message || 'Failed to verify code and update password', 'error');
     } finally {
       setOtpData(prev => ({ ...prev, isVerifying: false }));
     }
@@ -235,13 +237,21 @@ export function Settings() {
       setLoading(true);
       setError(null);
 
-      const { error } = await supabase.auth.updateUser({
-        email: user.email
-      }, {
-        emailRedirectTo: undefined
+      // Resend OTP using the same method
+      const { error } = await supabase.auth.signInWithOtp({
+        email: user.email!,
+        options: {
+          shouldCreateUser: false,
+          data: {
+            purpose: 'password_change_verification'
+          }
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OTP resend error:', error);
+        throw new Error('Failed to resend verification code. Please try again.');
+      }
 
       setOtpData(prev => ({
         ...prev,
@@ -250,10 +260,10 @@ export function Settings() {
         otp: ['', '', '', '', '', '']
       }));
 
-      showNotification('New OTP sent to your email', 'success');
+      showNotification('New verification code sent to your email', 'success');
     } catch (error: any) {
       console.error('Error resending OTP:', error);
-      showNotification(error.message || 'Failed to resend OTP', 'error');
+      showNotification(error.message || 'Failed to resend verification code', 'error');
     } finally {
       setLoading(false);
     }
@@ -563,7 +573,7 @@ export function Settings() {
                           className="px-4 py-2 bg-primary-orange text-white rounded-md hover:bg-primary-orange/90 disabled:opacity-50 flex items-center space-x-2"
                         >
                           <Mail className="w-4 h-4" />
-                          <span>{loading ? 'Sending OTP...' : 'Send Verification Code'}</span>
+                          <span>{loading ? 'Sending Code...' : 'Send Verification Code'}</span>
                         </button>
                       </div>
                     </form>
