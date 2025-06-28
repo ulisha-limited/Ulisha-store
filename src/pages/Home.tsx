@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ProductCard } from '../components/ProductCard';
 import { AdCarousel } from '../components/AdCarousel';
+import { PromoPopup } from '../components/PromoPopup';
 import { Search, ChevronDown, Facebook, Twitter, Instagram, Youtube, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types';
 import { useLocation, Link } from 'react-router-dom';
 import { fallbackProducts } from '../lib/supabase';
+import { usePromoPopup } from '../hooks/usePromoPopup';
 
 const categories = [
   'All Categories', 
@@ -36,6 +38,9 @@ export function Home() {
   const [usesFallback, setUsesFallback] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
+  
+  // Promo popup hook
+  const { showPopup, closePopup } = usePromoPopup();
 
   useEffect(() => {
     fetchProductsWithRetry();
@@ -354,6 +359,9 @@ export function Home() {
           </div>
         </footer>
       </div>
+
+      {/* Promotional Popup */}
+      <PromoPopup isVisible={showPopup} onClose={closePopup} />
     </>
   );
 }
