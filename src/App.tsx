@@ -18,6 +18,7 @@ import { Returns } from './pages/Returns';
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 import { InstallPWA } from './components/InstallPWA';
+import { useAnalytics } from './hooks/useAnalytics';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -36,6 +37,9 @@ function App() {
   const setSession = useAuthStore((state) => state.setSession);
   const refreshSession = useAuthStore((state) => state.refreshSession);
   const user = useAuthStore((state) => state.user);
+
+  // Initialize analytics tracking
+  useAnalytics();
 
   useEffect(() => {
     // Initial session check - handle silently to avoid console errors
