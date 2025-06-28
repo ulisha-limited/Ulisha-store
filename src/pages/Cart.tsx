@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
+import { useCurrencyStore } from '../store/currencyStore';
 import { FlutterwavePayment } from '../components/FlutterwavePayment';
 import { OrderReceipt } from '../components/OrderReceipt';
 import { supabase } from '../lib/supabase';
@@ -13,6 +14,7 @@ const FREE_DELIVERY_THRESHOLD = 50000; // ₦50,000
 export function Cart() {
   const { items, removeFromCart, updateQuantity, loading, fetchCart, clearCart } = useCartStore();
   const user = useAuthStore((state) => state.user);
+  const { formatPrice, convertPrice, currency } = useCurrencyStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -54,6 +56,17 @@ export function Cart() {
     }
   }, [navigate, clearCart]);
 
+  // Listen for currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      // Force re-render by updating a state
+      setCheckoutLoading(false);
+    };
+
+    window.addEventListener('currencyChange', handleCurrencyChange);
+    return () => window.removeEventListener('currencyChange', handleCurrencyChange);
+  }, []);
+
   const subtotal = items.reduce((sum, item) => {
     if (item.product) {
       return sum + item.product.price * item.quantity;
@@ -64,6 +77,12 @@ export function Cart() {
   // Calculate delivery fee - free if subtotal is above threshold
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total = subtotal + deliveryFee;
+
+  // Convert prices for display
+  const convertedSubtotal = convertPrice(subtotal);
+  const convertedDeliveryFee = convertPrice(deliveryFee);
+  const convertedTotal = convertPrice(total);
+  const convertedFreeThreshold = convertPrice(FREE_DELIVERY_THRESHOLD);
 
   const handleQuantityChange = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -89,7 +108,7 @@ export function Cart() {
         .from('orders')
         .insert([{
           user_id: user?.id,
-          total: total,
+          total: total, // Always store in NGN
           status: 'pending',
           delivery_name: deliveryDetails.name,
           delivery_phone: deliveryDetails.phone,
@@ -106,7 +125,7 @@ export function Cart() {
         order_id: order.id,
         product_id: item.product_id,
         quantity: item.quantity,
-        price: item.product.price
+        price: item.product.price // Store original NGN price
       }));
 
       const { error: itemsError } = await supabase
@@ -196,10 +215,7 @@ export function Cart() {
   };
 
   const generateWhatsAppMessage = (order: any, items: any[]) => {
-    const formattedTotal = new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(order.total);
+    const formattedTotal = formatPrice(order.total);
 
     let message = `🛍️ *New Order #${order.id.substring(0, 8)}*\n\n`;
     message += `*Customer Details:*\n`;
@@ -209,10 +225,7 @@ export function Cart() {
     
     message += `*Order Items:*\n`;
     items.forEach(item => {
-      const subtotal = new Intl.NumberFormat('en-NG', {
-        style: 'currency',
-        currency: 'NGN'
-      }).format(item.quantity * item.product.price);
+      const subtotal = formatPrice(item.quantity * item.product.price);
       
       message += `• ${item.product.name} (×${item.quantity}) - ${subtotal}\n`;
     });
@@ -321,10 +334,7 @@ export function Cart() {
                               </div>
                             )}
                             <p className="text-lg font-bold text-gray-900 mt-1">
-                              {new Intl.NumberFormat('en-NG', {
-                                style: 'currency',
-                                currency: 'NGN'
-                              }).format(item.product.price)}
+                              {formatPrice(item.product.price)}
                             </p>
                           </div>
                         </div>
@@ -369,12 +379,7 @@ export function Cart() {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between">
                   <span>Subtotal ({items.length} items)</span>
-                  <span>
-                    {new Intl.NumberFormat('en-NG', {
-                      style: 'currency',
-                      currency: 'NGN'
-                    }).format(subtotal)}
-                  </span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
 
                 {/* Delivery Information */}
@@ -388,10 +393,7 @@ export function Cart() {
                       {deliveryFee === 0 ? (
                         <span className="text-green-600 font-medium">FREE</span>
                       ) : (
-                        new Intl.NumberFormat('en-NG', {
-                          style: 'currency',
-                          currency: 'NGN'
-                        }).format(deliveryFee)
+                        formatPrice(deliveryFee)
                       )}
                     </span>
                   </div>
@@ -399,10 +401,7 @@ export function Cart() {
                     {subtotal >= FREE_DELIVERY_THRESHOLD ? (
                       "You've qualified for free delivery!"
                     ) : (
-                      `Add ${new Intl.NumberFormat('en-NG', {
-                        style: 'currency',
-                        currency: 'NGN'
-                      }).format(FREE_DELIVERY_THRESHOLD - subtotal)} more to get free delivery`
+                      `Add ${formatPrice(FREE_DELIVERY_THRESHOLD - subtotal)} more to get free delivery`
                     )}
                   </p>
                 </div>
@@ -410,13 +409,13 @@ export function Cart() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>
-                      {new Intl.NumberFormat('en-NG', {
-                        style: 'currency',
-                        currency: 'NGN'
-                      }).format(total)}
-                    </span>
+                    <span>{formatPrice(total)}</span>
                   </div>
+                  {currency === 'USD' && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Converted from NGN at rate: 1 USD = ₦1,630
+                    </p>
+                  )}
                 </div>
               </div>
               
@@ -482,7 +481,7 @@ export function Cart() {
                 
                 <div className="flex flex-col space-y-4">
                   <FlutterwavePayment
-                    amount={total}
+                    amount={total} // Always pass NGN amount to Flutterwave
                     onSuccess={handleFlutterwaveSuccess}
                     onClose={handleFlutterwaveClose}
                     customerInfo={{

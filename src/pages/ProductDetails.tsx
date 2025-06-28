@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Loader, ShoppingCart, Star, Phone, ChevronLeft, Copy, Check, Percent } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
+import { useCurrencyStore } from '../store/currencyStore';
 import type { Product } from '../types';
 import { ProductCard } from '../components/ProductCard';
 
@@ -36,6 +37,7 @@ export function ProductDetails() {
   const addToCart = useCartStore((state) => state.addToCart);
   const isLoggedIn = useAuthStore((state) => !!state.user);
   const user = useAuthStore((state) => state.user);
+  const { formatPrice, currency } = useCurrencyStore();
 
   useEffect(() => {
     if (productId) {
@@ -67,6 +69,17 @@ export function ProductDetails() {
       fetchSimilarProducts();
     }
   }, [product]);
+
+  // Listen for currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      // Force re-render by updating a state
+      setLinkCopied(false);
+    };
+
+    window.addEventListener('currencyChange', handleCurrencyChange);
+    return () => window.removeEventListener('currencyChange', handleCurrencyChange);
+  }, []);
 
   const fetchSimilarProducts = async () => {
     if (!product) return;
@@ -335,6 +348,9 @@ export function ProductDetails() {
     );
   }
 
+  const formattedPrice = formatPrice(product.price);
+  const formattedOriginalPrice = product.original_price ? formatPrice(product.original_price) : null;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -438,17 +454,11 @@ export function ProductDetails() {
                 {product.discount_active && product.original_price ? (
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-gray-900">
-                      {new Intl.NumberFormat('en-NG', {
-                        style: 'currency',
-                        currency: 'NGN'
-                      }).format(product.price)}
+                      {formattedPrice}
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-lg text-gray-500 line-through">
-                        {new Intl.NumberFormat('en-NG', {
-                          style: 'currency',
-                          currency: 'NGN'
-                        }).format(product.original_price)}
+                        {formattedOriginalPrice}
                       </span>
                       <span className="text-red-500 font-medium">
                         Save {product.discount_percentage}%
@@ -457,12 +467,14 @@ export function ProductDetails() {
                   </div>
                 ) : (
                   <div className="text-2xl font-bold text-gray-900">
-                    {new Intl.NumberFormat('en-NG', {
-                      style: 'currency',
-                      currency: 'NGN'
-                    }).format(product.price)}
+                    {formattedPrice}
                   </div>
                 )}
+                
+                {/* Currency indicator */}
+                <div className="text-sm text-gray-500 mt-1">
+                  {currency === 'USD' ? 'USD (converted from NGN)' : 'Nigerian Naira'}
+                </div>
               </div>
 
               {availableColors.length > 0 && (

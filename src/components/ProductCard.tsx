@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Product } from '../types';
 import { Star, ShoppingCart, Phone, Share2, Copy, Check, MapPin, Plane } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
+import { useCurrencyStore } from '../store/currencyStore';
 import { useNavigate } from 'react-router-dom';
 
 export function ProductCard({ product }: { product: Product }) {
@@ -11,17 +12,22 @@ export function ProductCard({ product }: { product: Product }) {
   
   const addToCart = useCartStore((state) => state.addToCart);
   const isLoggedIn = useAuthStore((state) => !!state.user);
+  const { formatPrice, currency } = useCurrencyStore();
   const navigate = useNavigate();
 
-  const formattedPrice = new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN'
-  }).format(product.price);
+  const formattedPrice = formatPrice(product.price);
+  const formattedOriginalPrice = product.original_price ? formatPrice(product.original_price) : null;
 
-  const formattedOriginalPrice = product.original_price ? new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN'
-  }).format(product.original_price) : null;
+  // Listen for currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      // Force re-render by updating a state
+      setLinkCopied(false);
+    };
+
+    window.addEventListener('currencyChange', handleCurrencyChange);
+    return () => window.removeEventListener('currencyChange', handleCurrencyChange);
+  }, []);
 
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
@@ -214,6 +220,10 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           
+          {/* Currency indicator */}
+          <div className="text-xs text-gray-500">
+            {currency === 'USD' ? 'USD (converted)' : 'NGN'}
+          </div>
         </div>
       </div>
     </div>

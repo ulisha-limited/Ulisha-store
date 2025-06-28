@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from './authStore';
 
 interface CurrencyState {
   currency: 'NGN' | 'USD';
@@ -9,6 +8,7 @@ interface CurrencyState {
   error: string | null;
   setCurrency: (currency: 'NGN' | 'USD') => Promise<void>;
   formatPrice: (price: number) => string;
+  convertPrice: (price: number) => number;
   initialize: () => Promise<void>;
 }
 
@@ -21,18 +21,24 @@ export const useCurrencyStore = create<CurrencyState>((set, get) => ({
   initialize: async () => {
     try {
       set({ loading: true, error: null });
-      const user = useAuthStore.getState().user;
       
-      if (user) {
+      // Get currency from localStorage first
+      const savedCurrency = localStorage.getItem('currency') as 'NGN' | 'USD';
+      if (savedCurrency) {
+        set({ currency: savedCurrency });
+      }
+
+      // Try to get user preference from database
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
         const { data, error } = await supabase
           .from('user_preferences')
           .select('currency')
-          .eq('user_id', user.id)
+          .eq('user_id', session.user.id)
           .single();
 
-        if (error) throw error;
-        
-        if (data) {
+        if (!error && data?.currency) {
           localStorage.setItem('currency', data.currency);
           set({ currency: data.currency as 'NGN' | 'USD' });
         }
@@ -48,21 +54,27 @@ export const useCurrencyStore = create<CurrencyState>((set, get) => ({
   setCurrency: async (currency) => {
     try {
       set({ loading: true, error: null });
-      const user = useAuthStore.getState().user;
       
-      if (user) {
+      // Update localStorage immediately
+      localStorage.setItem('currency', currency);
+      set({ currency });
+
+      // Try to save to database if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
         const { error } = await supabase
           .from('user_preferences')
           .upsert({
-            user_id: user.id,
+            user_id: session.user.id,
             currency
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error saving currency preference:', error);
+          // Don't throw error, just log it since localStorage update succeeded
+        }
       }
-
-      localStorage.setItem('currency', currency);
-      set({ currency });
 
       // Notify other components of currency change
       window.dispatchEvent(
@@ -73,33 +85,40 @@ export const useCurrencyStore = create<CurrencyState>((set, get) => ({
     } catch (error) {
       console.error('Error updating currency:', error);
       set({ error: 'Failed to update currency preference' });
+      throw error;
     } finally {
       set({ loading: false });
     }
+  },
+
+  convertPrice: (price) => {
+    const { currency, exchangeRate } = get();
+    
+    if (currency === 'USD') {
+      return price / exchangeRate;
+    }
+    
+    return price;
   },
 
   formatPrice: (price) => {
     const { currency, exchangeRate } = get();
     
     if (currency === 'USD') {
+      const usdPrice = price / exchangeRate;
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      }).format(price / exchangeRate);
+      }).format(usdPrice);
     }
     
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(price);
   }
 }));
-
-// Listen for currency changes
-window.addEventListener('currencyChange', ((event: CustomEvent) => {
-  useCurrencyStore.getState().setCurrency(event.detail.currency);
-}) as EventListener);

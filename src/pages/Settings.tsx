@@ -26,11 +26,12 @@ export function Settings() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
-  const { currency, setCurrency, loading: currencyLoading } = useCurrencyStore();
+  const { currency, setCurrency, loading: currencyLoading, initialize } = useCurrencyStore();
 
   useEffect(() => {
     loadUserPreferences();
-  }, [user]);
+    initialize();
+  }, [user, initialize]);
 
   const loadUserPreferences = async () => {
     if (!user) return;
@@ -43,7 +44,7 @@ export function Settings() {
         .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
         setNotifications({
@@ -82,7 +83,8 @@ export function Settings() {
           user_id: user.id,
           order_updates: updates.orderUpdates,
           promotions: updates.promotions,
-          security_alerts: updates.security
+          security_alerts: updates.security,
+          currency: currency // Include current currency
         });
 
       if (error) throw error;
@@ -161,36 +163,54 @@ export function Settings() {
             <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Currency Preferences</h2>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 mb-4">
                   <button
                     onClick={() => handleCurrencyChange('NGN')}
-                    className={`px-4 py-2 rounded-md flex items-center space-x-2 ${
-                      currency === 'NGN'
-                        ? 'bg-primary-orange text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
                     disabled={loading || currencyLoading}
+                    className={`px-6 py-3 rounded-md flex items-center space-x-2 transition-all ${
+                      currency === 'NGN'
+                        ? 'bg-primary-orange text-white shadow-md'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    } ${(loading || currencyLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <span>₦ NGN</span>
+                    <span className="text-lg">₦</span>
+                    <span className="font-medium">Nigerian Naira (NGN)</span>
                   </button>
 
                   <button
                     onClick={() => handleCurrencyChange('USD')}
-                    className={`px-4 py-2 rounded-md flex items-center space-x-2 ${
-                      currency === 'USD'
-                        ? 'bg-primary-orange text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
                     disabled={loading || currencyLoading}
+                    className={`px-6 py-3 rounded-md flex items-center space-x-2 transition-all ${
+                      currency === 'USD'
+                        ? 'bg-primary-orange text-white shadow-md'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    } ${(loading || currencyLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <DollarSign className="w-4 h-4" />
-                    <span>USD</span>
+                    <DollarSign className="w-5 h-5" />
+                    <span className="font-medium">US Dollar (USD)</span>
                   </button>
                 </div>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  Current exchange rate: 1 USD = ₦1,630
-                </p>
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p className="flex items-center justify-between">
+                    <span>Current selection:</span>
+                    <span className="font-medium text-gray-900">
+                      {currency === 'NGN' ? 'Nigerian Naira (₦)' : 'US Dollar ($)'}
+                    </span>
+                  </p>
+                  <p className="flex items-center justify-between">
+                    <span>Exchange rate:</span>
+                    <span className="font-medium text-gray-900">1 USD = ₦1,630</span>
+                  </p>
+                  {currency === 'USD' && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-md">
+                      <p className="text-blue-800 text-sm">
+                        <strong>Note:</strong> Prices are converted from Nigerian Naira for display purposes. 
+                        All payments are processed in NGN through our local payment gateway.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
