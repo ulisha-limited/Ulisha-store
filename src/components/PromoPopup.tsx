@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShoppingBag, Star, Percent, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, Star, Percent, ArrowRight, Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCurrencyStore } from '../store/currencyStore';
@@ -13,14 +13,28 @@ interface PromoPopupProps {
 export function PromoPopup({ isVisible, onClose }: PromoPopupProps) {
   const [featuredProduct, setFeaturedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSecondShow, setIsSecondShow] = useState(false);
   const navigate = useNavigate();
   const { formatPrice } = useCurrencyStore();
 
   useEffect(() => {
     if (isVisible) {
+      checkIfSecondShow();
       fetchRandomDiscountedProduct();
     }
   }, [isVisible]);
+
+  const checkIfSecondShow = () => {
+    const popupData = localStorage.getItem('promo_popup_data');
+    if (popupData) {
+      try {
+        const data = JSON.parse(popupData);
+        setIsSecondShow(data.showCount >= 1);
+      } catch (error) {
+        setIsSecondShow(false);
+      }
+    }
+  };
 
   const fetchRandomDiscountedProduct = async () => {
     try {
@@ -76,9 +90,12 @@ export function PromoPopup({ isVisible, onClose }: PromoPopupProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all">
+      <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all animate-fade-in">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-primary-orange to-red-500 p-6 text-white">
+        <div className={`relative ${isSecondShow 
+          ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
+          : 'bg-gradient-to-r from-primary-orange to-red-500'
+        } p-6 text-white`}>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
@@ -88,11 +105,22 @@ export function PromoPopup({ isVisible, onClose }: PromoPopupProps) {
           
           <div className="text-center">
             <div className="flex items-center justify-center mb-2">
-              <ShoppingBag className="w-8 h-8 mr-2" />
+              {isSecondShow ? (
+                <Gift className="w-8 h-8 mr-2" />
+              ) : (
+                <ShoppingBag className="w-8 h-8 mr-2" />
+              )}
               <span className="text-2xl font-bold">UlishaStore</span>
             </div>
-            <h2 className="text-xl font-bold mb-1">Sweet Product Sales!</h2>
-            <p className="text-sm opacity-90">Register now and enjoy exclusive discounts</p>
+            <h2 className="text-xl font-bold mb-1">
+              {isSecondShow ? 'Last Chance for Sweet Deals!' : 'Sweet Product Sales!'}
+            </h2>
+            <p className="text-sm opacity-90">
+              {isSecondShow 
+                ? 'Don\'t miss out on these exclusive discounts' 
+                : 'Register now and enjoy exclusive discounts'
+              }
+            </p>
           </div>
         </div>
 
@@ -115,6 +143,11 @@ export function PromoPopup({ isVisible, onClose }: PromoPopupProps) {
                   <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full flex items-center space-x-1">
                     <Percent className="w-3 h-3" />
                     <span className="text-xs font-bold">{featuredProduct.discount_percentage}% OFF</span>
+                  </div>
+                )}
+                {isSecondShow && (
+                  <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded-full">
+                    <span className="text-xs font-bold">LIMITED TIME</span>
                   </div>
                 )}
               </div>
@@ -166,43 +199,75 @@ export function PromoPopup({ isVisible, onClose }: PromoPopupProps) {
               <div className="space-y-3">
                 <button
                   onClick={handleShopNow}
-                  className="w-full bg-primary-orange text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2"
+                  className={`w-full ${isSecondShow 
+                    ? 'bg-purple-600 hover:bg-purple-700' 
+                    : 'bg-primary-orange hover:bg-primary-orange/90'
+                  } text-white py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2`}
                 >
                   <ShoppingBag className="w-5 h-5" />
-                  <span>Shop Now</span>
+                  <span>{isSecondShow ? 'Grab This Deal' : 'Shop Now'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-2">
-                    Want to see more amazing deals?
+                    {isSecondShow 
+                      ? 'Join thousands of happy customers!' 
+                      : 'Want to see more amazing deals?'
+                    }
                   </p>
                   <button
                     onClick={handleRegister}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+                    className={`w-full ${isSecondShow 
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700' 
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+                    } text-white py-3 px-4 rounded-lg font-medium transition-all transform hover:scale-105`}
                   >
-                    Register for Exclusive Discounts
+                    {isSecondShow ? 'Register & Save More!' : 'Register for Exclusive Discounts'}
                   </button>
                 </div>
               </div>
 
               {/* Benefits */}
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className={`mt-4 p-3 ${isSecondShow ? 'bg-purple-50' : 'bg-gray-50'} rounded-lg`}>
                 <p className="text-xs text-gray-600 text-center">
-                  🎉 <strong>Register Benefits:</strong> Up to 20% off • Free shipping • Early access to sales
+                  {isSecondShow ? (
+                    <>🔥 <strong>Final Offer:</strong> Up to 25% off • Free shipping • VIP access</>
+                  ) : (
+                    <>🎉 <strong>Register Benefits:</strong> Up to 20% off • Free shipping • Early access to sales</>
+                  )}
                 </p>
               </div>
+
+              {/* Second show urgency indicator */}
+              {isSecondShow && (
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-purple-600 font-medium">
+                    ⏰ This offer won't appear again for another hour!
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-8">
               <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Amazing Deals Await!</h3>
-              <p className="text-gray-600 mb-4">Register now to discover incredible discounts on quality products</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {isSecondShow ? 'Final Call for Amazing Deals!' : 'Amazing Deals Await!'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {isSecondShow 
+                  ? 'Last chance to register and unlock exclusive discounts' 
+                  : 'Register now to discover incredible discounts on quality products'
+                }
+              </p>
               <button
                 onClick={handleRegister}
-                className="w-full bg-primary-orange text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-orange/90 transition-colors"
+                className={`w-full ${isSecondShow 
+                  ? 'bg-purple-600 hover:bg-purple-700' 
+                  : 'bg-primary-orange hover:bg-primary-orange/90'
+                } text-white py-3 px-4 rounded-lg font-medium transition-colors`}
               >
-                Register Now
+                {isSecondShow ? 'Register Now - Final Chance!' : 'Register Now'}
               </button>
             </div>
           )}
