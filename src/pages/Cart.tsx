@@ -21,6 +21,7 @@ export function Cart() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [paymentOption, setPaymentOption] = useState<'full' | 'partial'>('full');
   
   const canCheckout = items.length >= 2; // Minimum 2 items required for checkout
   
@@ -76,7 +77,17 @@ export function Cart() {
 
   // Calculate delivery fee - free if subtotal is above threshold
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  
+  // Calculate totals based on payment option
+  const getPaymentAmount = () => {
+    if (paymentOption === 'partial') {
+      return subtotal; // Pay only for products, delivery fee on arrival
+    }
+    return subtotal + deliveryFee; // Pay full amount including delivery
+  };
+
   const total = subtotal + deliveryFee;
+  const paymentAmount = getPaymentAmount();
 
   // Convert prices for display
   const convertedSubtotal = convertPrice(subtotal);
@@ -113,7 +124,8 @@ export function Cart() {
           delivery_name: deliveryDetails.name,
           delivery_phone: deliveryDetails.phone,
           delivery_address: `${deliveryDetails.address}, ${deliveryDetails.state}`,
-          payment_method: 'flutterwave'
+          payment_method: 'flutterwave',
+          delivery_fee_paid: paymentOption === 'full'
         }])
         .select()
         .single();
@@ -216,6 +228,8 @@ export function Cart() {
 
   const generateWhatsAppMessage = (order: any, items: any[]) => {
     const formattedTotal = formatPrice(order.total);
+    const formattedPaymentAmount = formatPrice(paymentAmount);
+    const formattedDeliveryFee = formatPrice(deliveryFee);
 
     let message = `🛍️ *New Order #${order.id.substring(0, 8)}*\n\n`;
     message += `*Customer Details:*\n`;
@@ -230,7 +244,27 @@ export function Cart() {
       message += `• ${item.product.name} (×${item.quantity}) - ${subtotal}\n`;
     });
     
-    message += `\n*Total Amount:* ${formattedTotal}\n`;
+    message += `\n*Payment Details:*\n`;
+    message += `Subtotal: ${formatPrice(subtotal)}\n`;
+    
+    if (deliveryFee > 0) {
+      message += `Delivery Fee: ${formattedDeliveryFee}`;
+      if (paymentOption === 'partial') {
+        message += ` (To be paid on arrival)\n`;
+      } else {
+        message += ` (Paid online)\n`;
+      }
+    } else {
+      message += `Delivery Fee: FREE\n`;
+    }
+    
+    message += `*Total Order Value:* ${formattedTotal}\n`;
+    message += `*Amount Paid Online:* ${formattedPaymentAmount}\n`;
+    
+    if (paymentOption === 'partial' && deliveryFee > 0) {
+      message += `*Amount to Collect on Delivery:* ${formattedDeliveryFee}\n`;
+    }
+    
     message += `*Payment Method:* ${order.payment_method}\n`;
     message += `*Payment Reference:* ${order.payment_ref}\n\n`;
     message += `Please process my order. Thank you!`;
@@ -405,18 +439,68 @@ export function Cart() {
                     )}
                   </p>
                 </div>
+
+                {/* Payment Options */}
+                {deliveryFee > 0 && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Payment Options</h3>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="paymentOption"
+                          value="full"
+                          checked={paymentOption === 'full'}
+                          onChange={(e) => setPaymentOption(e.target.value as 'full' | 'partial')}
+                          className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          Pay full amount online ({formatPrice(total)})
+                        </span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="paymentOption"
+                          value="partial"
+                          checked={paymentOption === 'partial'}
+                          onChange={(e) => setPaymentOption(e.target.value as 'full' | 'partial')}
+                          className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          Pay products only, delivery fee on arrival
+                        </span>
+                      </label>
+                    </div>
+                    {paymentOption === 'partial' && (
+                      <div className="mt-2 p-2 bg-yellow-50 rounded-md">
+                        <p className="text-xs text-yellow-800">
+                          You'll pay {formatPrice(deliveryFee)} to the delivery person upon arrival.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <p className="text-xs text-gray-700">Delivery Takes 1 to 14 days after payment- We will call you to confirm delivery information before sending</p>
+                
                 <div className="border-t pt-4">
                   <div className="flex justify-between font-bold">
-                    <span>Total</span>
-                    <span>{formatPrice(total)}</span>
+                    <span>Amount to Pay Now</span>
+                    <span>{formatPrice(paymentAmount)}</span>
                   </div>
-                  {currency === 'USD' && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Converted from NGN at rate: 1 USD = ₦1,630
-                    </p>
+                  {paymentOption === 'partial' && deliveryFee > 0 && (
+                    <div className="flex justify-between text-sm text-gray-600 mt-1">
+                      <span>Pay on arrival</span>
+                      <span>{formatPrice(deliveryFee)}</span>
+                    </div>
                   )}
                 </div>
+                {currency === 'USD' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Converted from NGN at rate: 1 USD = ₦1,630
+                  </p>
+                )}
               </div>
               
               {/* Contact Information */}
@@ -481,7 +565,7 @@ export function Cart() {
                 
                 <div className="flex flex-col space-y-4">
                   <FlutterwavePayment
-                    amount={total} // Always pass NGN amount to Flutterwave
+                    amount={paymentAmount} // Pass the calculated payment amount
                     onSuccess={handleFlutterwaveSuccess}
                     onClose={handleFlutterwaveClose}
                     customerInfo={{
@@ -502,13 +586,18 @@ export function Cart() {
                     className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <CreditCard className="w-5 h-5" />
-                    <span>{checkoutLoading ? 'Processing...' : 'Pay with Flutterwave'}</span>
+                    <span>
+                      {checkoutLoading 
+                        ? 'Processing...' 
+                        : `Pay ${formatPrice(paymentAmount)} with Flutterwave`
+                      }
+                    </span>
                   </FlutterwavePayment>
 
                   <button
                     onClick={() => {
                       // Crypto payment logic will go here
-                      window.location.href = `https://commerce.coinbase.com/checkout/YOUR-CHECKOUT-ID?amount=${total}`;
+                      window.location.href = `https://commerce.coinbase.com/checkout/YOUR-CHECKOUT-ID?amount=${paymentAmount}`;
                     }}
                     disabled={
                       !deliveryDetails.name || 
