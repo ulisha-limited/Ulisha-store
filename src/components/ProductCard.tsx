@@ -220,10 +220,7 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           
-          {/* Currency indicator */}
-          <div className="text-xs text-gray-500">
-            {currency === 'USD' ? 'USD (converted)' : 'NGN'}
-          </div>
+        
         </div>
       </div>
     </div>
