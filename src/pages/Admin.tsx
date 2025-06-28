@@ -85,11 +85,6 @@ export function Admin() {
     try {
       setAnalyticsLoading(true);
 
-      // Get total users count
-      const { count: totalUsers } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-
       // Get today's stats
       const today = new Date().toISOString().split('T')[0];
       const { data: todayStats } = await supabase
@@ -109,7 +104,7 @@ export function Admin() {
       await supabase.rpc('update_daily_stats');
 
       setAnalytics({
-        totalUsers: totalUsers || 0,
+        totalUsers: 0, // Will be updated when we have proper RPC function
         todayVisitors: todayStats?.unique_visitors || 0,
         todayPageViews: todayStats?.page_views || 0,
         todayNewUsers: todayStats?.new_users || 0,
@@ -471,7 +466,8 @@ export function Admin() {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Total Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{analytics?.totalUsers || 0}</p>
+                      <p className="text-2xl font-bold text-gray-900">-</p>
+                      <p className="text-xs text-gray-500">Coming soon</p>
                     </div>
                   </div>
                 </div>
