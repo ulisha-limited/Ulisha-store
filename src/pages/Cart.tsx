@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle } from 'lucide-react';
+import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle, Info } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { useCurrencyStore } from '../store/currencyStore';
@@ -114,55 +114,66 @@ export function Cart() {
 
   const createOrder = async () => {
     try {
-      // Create initial order with pending status
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          user_id: user?.id,
-          total: total, // Always store in NGN
-          status: 'pending',
-          delivery_name: deliveryDetails.name,
-          delivery_phone: deliveryDetails.phone,
-          delivery_address: `${deliveryDetails.address}, ${deliveryDetails.state}`,
-          payment_method: 'flutterwave',
-          delivery_fee_paid: paymentOption === 'full'
-        }])
-        .select()
-        .single();
+      setCheckoutLoading(true);
+      
+      // Validate required fields
+      if (!deliveryDetails.name || !deliveryDetails.phone || !deliveryDetails.address || !deliveryDetails.state) {
+        throw new Error('Please fill in all delivery details');
+      }
 
-      if (orderError) throw orderError;
+      if (items.length === 0) {
+        throw new Error('Cart is empty');
+      }
 
-      // Create order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
+      // Prepare cart items for order creation
+      const cartItems = items.map(item => ({
         product_id: item.product_id,
         quantity: item.quantity,
-        price: item.product.price // Store original NGN price
+        price: item.product.price,
+        variant_id: item.variant_id || null,
+        selected_color: item.selected_color || null,
+        selected_size: item.selected_size || null
       }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+      // Use the improved order creation function
+      const { data: orderId, error: orderError } = await supabase.rpc('create_order_with_items', {
+        p_user_id: user?.id,
+        p_total: total,
+        p_delivery_fee: deliveryFee,
+        p_delivery_fee_paid: paymentOption === 'full',
+        p_payment_option: paymentOption,
+        p_delivery_name: deliveryDetails.name,
+        p_delivery_phone: deliveryDetails.phone,
+        p_delivery_address: `${deliveryDetails.address}, ${deliveryDetails.state}`,
+        p_payment_method: 'flutterwave',
+        p_cart_items: JSON.stringify(cartItems)
+      });
 
-      if (itemsError) throw itemsError;
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw new Error(`Failed to create order: ${orderError.message}`);
+      }
 
-      return order.id;
+      if (!orderId) {
+        throw new Error('Order creation failed - no order ID returned');
+      }
+
+      return orderId;
     } catch (error) {
       console.error('Error creating order:', error);
+      setCheckoutLoading(false);
       throw error;
     }
   };
 
   const handleFlutterwaveInit = async () => {
     try {
-      setCheckoutLoading(true);
       const newOrderId = await createOrder();
       setOrderId(newOrderId);
       return newOrderId;
     } catch (error) {
       console.error('Error initializing payment:', error);
-      showNotification('Error creating order. Please try again.', 'error');
-      setCheckoutLoading(false);
+      showNotification(error instanceof Error ? error.message : 'Error creating order. Please try again.', 'error');
       return null;
     }
   };
@@ -181,7 +192,18 @@ export function Cart() {
           status: 'completed'
         })
         .eq('id', orderId)
-        .select()
+        .select(`
+          *,
+          items:order_items (
+            id,
+            product:products (
+              name,
+              image
+            ),
+            quantity,
+            price
+          )
+        `)
         .single();
 
       if (updateError) throw updateError;
@@ -224,6 +246,7 @@ export function Cart() {
           console.error('Error deleting pending order:', error);
         });
     }
+    setCheckoutLoading(false);
   };
 
   const generateWhatsAppMessage = (order: any, items: any[]) => {
@@ -443,55 +466,81 @@ export function Cart() {
                 {/* Payment Options */}
                 {deliveryFee > 0 && (
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Payment Options</h3>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                      <Info className="w-4 h-4 mr-2 text-blue-500" />
+                      Payment Options
+                    </h3>
+                    <div className="space-y-3">
+                      <label className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                         <input
                           type="radio"
                           name="paymentOption"
                           value="full"
                           checked={paymentOption === 'full'}
                           onChange={(e) => setPaymentOption(e.target.value as 'full' | 'partial')}
-                          className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300"
+                          className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 mt-0.5"
                         />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Pay full amount online ({formatPrice(total)})
-                        </span>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-gray-900">
+                            Pay Full Amount Online
+                          </span>
+                          <div className="text-sm text-gray-600">
+                            {formatPrice(total)} - Everything paid upfront
+                          </div>
+                        </div>
                       </label>
-                      <label className="flex items-center">
+                      
+                      <label className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                         <input
                           type="radio"
                           name="paymentOption"
                           value="partial"
                           checked={paymentOption === 'partial'}
                           onChange={(e) => setPaymentOption(e.target.value as 'full' | 'partial')}
-                          className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300"
+                          className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 mt-0.5"
                         />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Pay products only, delivery fee on arrival
-                        </span>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-gray-900">
+                            Pay Products Only
+                          </span>
+                          <div className="text-sm text-gray-600">
+                            {formatPrice(subtotal)} now + {formatPrice(deliveryFee)} on delivery
+                          </div>
+                        </div>
                       </label>
                     </div>
+                    
                     {paymentOption === 'partial' && (
-                      <div className="mt-2 p-2 bg-yellow-50 rounded-md">
-                        <p className="text-xs text-yellow-800">
-                          You'll pay {formatPrice(deliveryFee)} to the delivery person upon arrival.
-                        </p>
+                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                        <div className="flex items-start">
+                          <Info className="w-4 h-4 text-yellow-600 mt-0.5 mr-2" />
+                          <p className="text-xs text-yellow-800">
+                            <strong>Note:</strong> You'll pay {formatPrice(deliveryFee)} to the delivery person upon arrival.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                <p className="text-xs text-gray-700">Delivery Takes 1 to 14 days after payment- We will call you to confirm delivery information before sending</p>
+                <div className="text-xs text-gray-700 bg-blue-50 p-3 rounded-md">
+                  <div className="flex items-start">
+                    <Truck className="w-4 h-4 text-blue-600 mt-0.5 mr-2" />
+                    <div>
+                      <p className="font-medium text-blue-900 mb-1">Delivery Information</p>
+                      <p>Delivery takes 1-14 days after payment confirmation. We'll call you to confirm delivery details before shipping.</p>
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="border-t pt-4">
-                  <div className="flex justify-between font-bold">
+                  <div className="flex justify-between font-bold text-lg">
                     <span>Amount to Pay Now</span>
-                    <span>{formatPrice(paymentAmount)}</span>
+                    <span className="text-primary-orange">{formatPrice(paymentAmount)}</span>
                   </div>
                   {paymentOption === 'partial' && deliveryFee > 0 && (
                     <div className="flex justify-between text-sm text-gray-600 mt-1">
-                      <span>Pay on arrival</span>
+                      <span>Pay on delivery</span>
                       <span>{formatPrice(deliveryFee)}</span>
                     </div>
                   )}
@@ -505,11 +554,11 @@ export function Cart() {
               
               {/* Contact Information */}
               <div>
-                <h3 className="text-md font-semibold text-gray-900 mb-3">Contact Information</h3>
+                <h3 className="text-md font-semibold text-gray-900 mb-3">Delivery Information</h3>
                 <div className="space-y-3 mb-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
+                      Full Name *
                     </label>
                     <input
                       type="text"
@@ -518,11 +567,12 @@ export function Cart() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
                       value={deliveryDetails.name}
                       onChange={(e) => setDeliveryDetails({...deliveryDetails, name: e.target.value})}
+                      placeholder="Enter your full name"
                     />
                   </div>
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
+                      Phone Number *
                     </label>
                     <input
                       type="tel"
@@ -531,11 +581,12 @@ export function Cart() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
                       value={deliveryDetails.phone}
                       onChange={(e) => setDeliveryDetails({...deliveryDetails, phone: e.target.value})}
+                      placeholder="Enter your phone number"
                     />
                   </div>
                   <div>
                     <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                      State
+                      State *
                     </label>
                     <input
                       type="text"
@@ -549,7 +600,7 @@ export function Cart() {
                   </div>
                   <div>
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Delivery Address
+                      Delivery Address *
                     </label>
                     <textarea
                       id="address"
@@ -624,9 +675,12 @@ export function Cart() {
                   </button>
 
                   {!canCheckout && items.length > 0 && (
-                    <p className="text-sm text-red-600 text-center">
-                      Minimum 2 items required to checkout
-                    </p>
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-sm text-red-600 text-center flex items-center justify-center">
+                        <Info className="w-4 h-4 mr-2" />
+                        Minimum 2 items required to checkout
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
