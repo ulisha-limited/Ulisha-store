@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle, Info } from 'lucide-react';
+import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle, Info, AlertCircle } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { useCurrencyStore } from '../store/currencyStore';
@@ -22,6 +22,7 @@ export function Cart() {
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [paymentOption, setPaymentOption] = useState<'full' | 'partial'>('full');
+  const [error, setError] = useState<string | null>(null);
   
   const canCheckout = items.length >= 2; // Minimum 2 items required for checkout
   
@@ -114,7 +115,7 @@ export function Cart() {
 
   const createOrder = async () => {
     try {
-      setCheckoutLoading(true);
+      setError(null);
       
       // Validate required fields
       if (!deliveryDetails.name || !deliveryDetails.phone || !deliveryDetails.address || !deliveryDetails.state) {
@@ -124,6 +125,18 @@ export function Cart() {
       if (items.length === 0) {
         throw new Error('Cart is empty');
       }
+
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Creating order with details:', {
+        user_id: user.id,
+        total: total,
+        delivery_fee: deliveryFee,
+        payment_option: paymentOption,
+        items_count: items.length
+      });
 
       // Prepare cart items for order creation
       const cartItems = items.map(item => ({
@@ -136,8 +149,8 @@ export function Cart() {
       }));
 
       // Use the improved order creation function
-      const { data: orderId, error: orderError } = await supabase.rpc('create_order_with_items', {
-        p_user_id: user?.id,
+      const { data: newOrderId, error: orderError } = await supabase.rpc('create_order_with_items', {
+        p_user_id: user.id,
         p_total: total,
         p_delivery_fee: deliveryFee,
         p_delivery_fee_paid: paymentOption === 'full',
@@ -154,32 +167,42 @@ export function Cart() {
         throw new Error(`Failed to create order: ${orderError.message}`);
       }
 
-      if (!orderId) {
+      if (!newOrderId) {
         throw new Error('Order creation failed - no order ID returned');
       }
 
-      return orderId;
+      console.log('Order created successfully:', newOrderId);
+      return newOrderId;
     } catch (error) {
       console.error('Error creating order:', error);
-      setCheckoutLoading(false);
+      setError(error instanceof Error ? error.message : 'Failed to create order');
       throw error;
     }
   };
 
   const handleFlutterwaveInit = async () => {
     try {
+      setCheckoutLoading(true);
+      setError(null);
+      
       const newOrderId = await createOrder();
       setOrderId(newOrderId);
       return newOrderId;
     } catch (error) {
       console.error('Error initializing payment:', error);
-      showNotification(error instanceof Error ? error.message : 'Error creating order. Please try again.', 'error');
+      setCheckoutLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Error creating order. Please try again.';
+      setError(errorMessage);
+      showNotification(errorMessage, 'error');
       return null;
     }
   };
 
   const handleFlutterwaveSuccess = async (response: any) => {
     try {
+      setError(null);
+      console.log('Processing successful payment:', response);
+      
       if (!orderId) {
         throw new Error('No order ID found');
       }
@@ -188,7 +211,7 @@ export function Cart() {
       const { data: updatedOrder, error: updateError } = await supabase
         .from('orders')
         .update({
-          payment_ref: response.transaction_id || response.tx_ref,
+          payment_ref: response.transaction_id || response.tx_ref || response.flw_ref,
           status: 'completed'
         })
         .eq('id', orderId)
@@ -206,7 +229,12 @@ export function Cart() {
         `)
         .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating order:', updateError);
+        throw updateError;
+      }
+
+      console.log('Order updated successfully:', updatedOrder);
 
       // Set current order for receipt
       setCurrentOrder(updatedOrder);
@@ -225,6 +253,8 @@ export function Cart() {
       showNotification('Order placed successfully! You can now download your receipt.', 'success');
     } catch (error) {
       console.error('Error processing order after payment:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Payment processing failed';
+      setError(errorMessage);
       showNotification('Payment was successful, but there was an error processing your order. Please contact support.', 'error');
     } finally {
       setCheckoutLoading(false);
@@ -233,6 +263,8 @@ export function Cart() {
   };
 
   const handleFlutterwaveClose = () => {
+    setCheckoutLoading(false);
+    
     // If payment was cancelled, delete the pending order
     if (orderId) {
       supabase
@@ -246,7 +278,6 @@ export function Cart() {
           console.error('Error deleting pending order:', error);
         });
     }
-    setCheckoutLoading(false);
   };
 
   const generateWhatsAppMessage = (order: any, items: any[]) => {
@@ -360,6 +391,16 @@ export function Cart() {
                     <span>Chat with Sales</span>
                   </button>
                 </div>
+
+                {/* Error Display */}
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
+                      <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                      <p className="text-red-800 text-sm">{error}</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   {items.map((item) => {
@@ -616,7 +657,7 @@ export function Cart() {
                 
                 <div className="flex flex-col space-y-4">
                   <FlutterwavePayment
-                    amount={paymentAmount} // Pass the calculated payment amount
+                    amount={paymentAmount} // Pass the calculated payment amount in NGN
                     onSuccess={handleFlutterwaveSuccess}
                     onClose={handleFlutterwaveClose}
                     customerInfo={{
@@ -630,7 +671,8 @@ export function Cart() {
                       !deliveryDetails.address ||
                       !deliveryDetails.state ||
                       checkoutLoading ||
-                      !canCheckout
+                      !canCheckout ||
+                      paymentAmount <= 0
                     }
                     orderId={orderId ?? undefined}
                     onInit={handleFlutterwaveInit}
@@ -648,7 +690,7 @@ export function Cart() {
                   <button
                     onClick={() => {
                       // Crypto payment logic will go here
-                      window.location.href = `https://commerce.coinbase.com/checkout/YOUR-CHECKOUT-ID?amount=${paymentAmount}`;
+                      showNotification('Crypto payment coming soon!', 'error');
                     }}
                     disabled={
                       !deliveryDetails.name || 
@@ -671,7 +713,7 @@ export function Cart() {
                     >
                       <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727" />
                     </svg>
-                    <span>Pay with Crypto</span>
+                    <span>Pay with Crypto (Coming Soon)</span>
                   </button>
 
                   {!canCheckout && items.length > 0 && (
