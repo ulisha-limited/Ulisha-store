@@ -124,7 +124,7 @@ export function FlutterwavePayment({
             onSuccess(paymentData);
           } else {
             console.error('Payment failed:', response);
-            throw new Error(response.message || 'Payment was not successful');
+            throw new Error('Payment was not successful');
           }
           closePaymentModal();
         },
