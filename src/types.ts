@@ -72,6 +72,11 @@ export interface FlutterwaveConfig {
     logo: string;
   };
   redirect_url?: string;
+  meta: {
+    order_id: string;
+    customer_id: string;
+    source: string;
+  }
 }
 
 export interface FlutterwaveResponse {
