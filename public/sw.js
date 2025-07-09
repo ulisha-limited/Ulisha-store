@@ -36,8 +36,21 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache, then network
+// Fetch event - serve from cache, then network, with offline fallback and WebSocket bypass
 self.addEventListener('fetch', event => {
+  // Ignore WebSocket requests
+  if (event.request.url.startsWith('ws://') || event.request.url.startsWith('wss://')) {
+    return;
+  }
+
+  // Offline fallback for navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/offline.html'))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -73,17 +86,4 @@ self.addEventListener('fetch', event => {
         );
       })
   );
-});
-
-// Handle offline fallback
-self.addEventListener('fetch', event => {
-  // Skip cross-origin requests
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          return caches.match('/offline.html');
-        })
-    );
-  }
 });
