@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Bell, Lock, User, Shield, Eye, EyeOff, Mail } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { useCurrencyStore } from '../store/currencyStore';
-import { supabase } from '../lib/supabase';
-import { OtpInput } from '../components/OtpInput';
+import { useAuthStore } from '../../store/authStore';
+import { useCurrencyStore } from '../../store/currencyStore';
+import { supabase } from '../../lib/supabase';
+import { OtpInput } from '../../components/OtpInput';
 
 export function Settings() {
   const [loading, setLoading] = useState(false);

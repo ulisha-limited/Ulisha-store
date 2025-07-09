@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
+import { supabase } from '../../../lib/supabase';
+import { useAuthStore } from '../../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Upload, Trash2, Edit, AlertTriangle, Check, X, Package, Plus, Image, Share2, Copy, Link as LinkIcon } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import type { Store as StoreType, Product } from '../types';
+import type { Store as StoreType, Product } from '../../../types';
 
 export function MyStore() {
   const [loading, setLoading] = useState(true);
