@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Package, Loader, Eye, Check, X, Calendar, MapPin, CreditCard, Phone, Truck, Clock, Star, ChevronRight, Filter, Search } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../../store/authStore';
+import { supabase } from '../../lib/supabase';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { OrderReceipt } from '../components/OrderReceipt';
+import { OrderReceipt } from '../../components/OrderReceipt';
 
 interface OrderItem {
   id: string;

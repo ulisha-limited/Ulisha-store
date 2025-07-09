@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
+import { supabase } from '../../../lib/supabase';
+import { useAuthStore } from '../../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Upload, Trash2, Edit, AlertTriangle, Check, X, Package, Plus, Image, Users, Eye, TrendingUp, DollarSign, ShoppingCart, Calendar } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import type { Product } from '../types';
+import type { Product } from '../../../types';
 
 const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com'];
 
@@ -25,7 +25,7 @@ interface AnalyticsData {
   }>;
 }
 
-export function Admin() {
+export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);

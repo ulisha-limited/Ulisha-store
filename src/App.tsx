@@ -2,19 +2,19 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
-import { Settings } from './pages/Settings';
-import { Admin } from './pages/Admin';
-import { Cart } from './pages/Cart';
-import { MyStore } from './pages/MyStore';
+import { Login } from './pages/auth/Login';
+import { Register } from './pages/auth/Register';
+import { Dashboard } from './pages/user/Dashboard';
+import { Settings } from './pages/user/Settings';
+import { Dashboard as AdminDashboard} from "./pages/user/admin/Dashboard";
+import { Cart } from './pages/cart/Cart';
+import { MyStore } from './pages/user/admin/MyStore';
 import { StoreDetails } from './pages/StoreDetails';
-import { ProductDetails } from './pages/ProductDetails';
+import { ProductDetails } from './pages/product/ProductDetails';
 import { Chat } from './pages/Chat';
 import { About } from './pages/About';
-import { Terms } from './pages/Terms';
-import { Returns } from './pages/Returns';
+import { Terms } from './pages/legal/Terms';
+import { Returns } from './pages/legal/Returns';
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 import { InstallPWA } from './components/InstallPWA';
@@ -77,8 +77,14 @@ function App() {
         <Navbar isLoggedIn={!!user} />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-          <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/dashboard" /> : <Login />}
+          />
+          <Route
+            path="/register"
+            element={user ? <Navigate to="/dashboard" /> : <Register />}
+          />
           <Route path="/about" element={<About />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/returns" element={<Returns />} />
@@ -114,28 +120,19 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
-            path="/store/:storeId"
-            element={<StoreDetails />}
-          />
-          <Route
-            path="/product/:productId"
-            element={<ProductDetails />}
-          />
-          <Route
-            path="/chat-support"
-            element={<Chat />}
-          />
+          <Route path="/store/:storeId" element={<StoreDetails />} />
+          <Route path="/product/:productId" element={<ProductDetails />} />
+          <Route path="/chat-support" element={<Chat />} />
           <Route
             path="/admin"
             element={
               <AdminRoute>
-                <Admin />
+                <AdminDashboard />
               </AdminRoute>
             }
           />
         </Routes>
-         <Footer />
+        <Footer />
         <InstallPWA />
       </div>
     </Router>

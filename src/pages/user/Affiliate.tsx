@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Copy, Check } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../../store/authStore';
+import { supabase } from '../../lib/supabase';
 
 interface AffiliateAccount {
   id: string;

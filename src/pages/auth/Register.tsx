@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ShoppingBag } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
+import { useAuthStore } from '../../store/authStore';
+import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter';
 
 export function Register() {
   const [name, setName] = useState('');

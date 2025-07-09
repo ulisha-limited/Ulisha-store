@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Trash2, Minus, Plus, CreditCard, ShoppingBag, Loader, Truck, X, MessageCircle, Info, AlertCircle } from 'lucide-react';
-import { useCartStore } from '../store/cartStore';
-import { useAuthStore } from '../store/authStore';
-import { useCurrencyStore } from '../store/currencyStore';
-import { FlutterwavePayment } from '../components/FlutterwavePayment';
-import { OrderReceipt } from '../components/OrderReceipt';
-import { supabase } from '../lib/supabase';
+import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
+import { useCurrencyStore } from '../../store/currencyStore';
+import { FlutterwavePayment } from '../../components/FlutterwavePayment';
+import { OrderReceipt } from '../../components/OrderReceipt';
+import { supabase } from '../../lib/supabase';
 
 const DELIVERY_FEE = 4000; // ₦4,000
 const FREE_DELIVERY_THRESHOLD = 50000; // ₦50,000

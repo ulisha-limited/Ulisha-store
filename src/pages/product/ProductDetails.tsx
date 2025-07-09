@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { Loader, ShoppingCart, Star, Phone, ChevronLeft, Copy, Check, Percent } from 'lucide-react';
-import { useCartStore } from '../store/cartStore';
-import { useAuthStore } from '../store/authStore';
-import { useCurrencyStore } from '../store/currencyStore';
-import type { Product } from '../types';
-import { ProductCard } from '../components/ProductCard';
+import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
+import { useCurrencyStore } from '../../store/currencyStore';
+import type { Product } from '../../types';
+import { ProductCard } from '../../components/ProductCard';
 
 interface ProductVariant {
   id: string;
