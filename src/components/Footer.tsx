@@ -56,7 +56,7 @@ function Footer() {
                         {categories.map((category) => (
                             <li key={category.name}>
                                 <Link
-                                    to={`/${category.name}`}
+                                    to={`/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}
                                     className="hover:text-primary-orange transition-colors whitespace-nowrap"
                                 >
                                     {category.name} ({category.count})

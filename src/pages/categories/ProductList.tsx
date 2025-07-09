@@ -1,40 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { ProductCard } from "../components/ProductCard";
-import { AdCarousel } from "../components/AdCarousel";
-import { PromoPopup } from "../components/PromoPopup";
-import {
-  Search,
-  ChevronDown,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
-  Phone,
-} from "lucide-react";
-import { supabase } from "../lib/supabase";
-import type { Product } from "../types";
-import { useLocation, Link } from "react-router-dom";
-import { fallbackProducts } from "../lib/supabase";
-import { usePromoPopup } from "../hooks/usePromoPopup";
+import React, { useState, useEffect } from 'react';
+import { ProductCard } from '../../components/ProductCard';
+import { AdCarousel } from '../../components/AdCarousel';
+import { PromoPopup } from '../../components/PromoPopup';
+import { Search, ChevronDown, Facebook, Twitter, Instagram, Youtube, Phone } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import type { Product } from '../../types';
+import { useLocation, Link, useParams } from 'react-router-dom';
+import { fallbackProducts } from '../../lib/supabase';
+import { usePromoPopup } from '../../hooks/usePromoPopup';
 
 const categories = [
-  "All Categories",
-  "Clothes",
-  "Accessories",
-  "Shoes",
-  "Smart Watches",
-  "Electronics",
-  "Perfumes & Body Spray",
-  "Phones",
-  "Handbags",
-  "Jewelries",
-  "Gym Wear",
+  'All Categories', 
+  'Clothes', 
+  'Accessories', 
+  'Shoes', 
+  'Smart Watches', 
+  'Electronics',
+  'Perfumes & Body Spray',
+  'Phones',
+  'Handbags',
+  'Jewelries',
+  'Gym Wear'
+  
 ];
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
-export function Home() {
+export function ProductList() {
+  const { category } = useParams<{ category: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +69,7 @@ export function Home() {
     return () => {
       supabase.removeChannel(productsSubscription);
     };
-  }, [location.search]);
+  }, [location.search, category]);
 
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
@@ -98,6 +92,7 @@ export function Home() {
       const { data, error } = await supabase
         .from("products")
         .select("*")
+        .ilike("category", `%${(category ?? "").replace(/-/g, " ")}%`)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -154,7 +149,6 @@ export function Home() {
     }
   };
 
-
   return (
     <>
       <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -196,8 +190,8 @@ export function Home() {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold text-gray-900">
-                New items 
+              <h1 className="text-xl font-bold text-gray-900 capitalize">
+                {category ? category : ""}
               </h1>
             </div>
 
