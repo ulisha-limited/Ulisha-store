@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 
 
 function Footer() {
-    const [categories, setCategories] = useState<string[]>([]);
+    const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
 
     useEffect(() => {
         fetchCategories();
@@ -16,17 +16,22 @@ function Footer() {
             .from('products')
             .select('category')
             .order('created_at', { ascending: false });
-
-        if (data) {
-            const uniqueCategories = Array.from(
-                new Set(
-                    data
-                        .map((product: { category?: string }) => product.category)
-                        .filter((cat): cat is string => !!cat && cat.trim() !== '')
-                )
-            );
-            setCategories(uniqueCategories);
-        }
+            if (data) {
+                // Count products per category
+                const categoryCountMap: Record<string, number> = {};
+                data.forEach((product: { category?: string }) => {
+                    const cat = product.category?.trim();
+                    if (cat) {
+                        categoryCountMap[cat] = (categoryCountMap[cat] || 0) + 1;
+                    }
+                });
+                // Convert to array of { name, count }
+                const uniqueCategories = Object.entries(categoryCountMap).map(([name, count]) => ({
+                    name,
+                    count,
+                }));
+                setCategories(uniqueCategories as any); // Update state type to match this structure
+            }
         if (error) {
             if (error.code === 'PGRST301' || error.message?.includes('Failed to fetch')) {
                 return;
@@ -42,32 +47,33 @@ function Footer() {
     return (
         <footer className="bg-gray-900 text-white mt-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+            {/* Categories Section */}
+            <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4">Categories</h3>
+                {categories.length > 0 ? (
+                    <ul className="flex flex-wrap text-gray-400 gap-x-2 gap-y-1">
+                        {categories.map((category) => (
+                            <li key={category.name}>
+                                <Link
+                                    to={`/${category.name}`}
+                                    className="hover:text-primary-orange transition-colors whitespace-nowrap"
+                                >
+                                    {category.name} ({category.count})
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-gray-500 text-sm">No categories found.</p>
+                )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                
 
             {/* About UlishaStore Section */}
             <div>
-            {/* Categories Section */}
-            <div>
-            <h3 className="text-lg font-semibold mb-4">Categories</h3>
-            {categories.length > 0 ? (
-                <ul className="flex flex-wrap text-gray-400 gap-x-2 gap-y-1">
-                {categories.map((category) => (
-                <li key={category}>
-                <Link
-                    to={`/${category}`}
-                    className="hover:text-primary-orange transition-colors whitespace-nowrap"
-                >
-                    {category}
-                </Link>
-                </li>
-                ))}
-                </ul>
-            ) : (
-                <p className="text-gray-500 text-sm">No categories found.</p>
-            )}
-            </div>
-            <br />
             <h3 className="text-lg font-semibold mb-4">About UlishaStore</h3>
             <p className="text-gray-400 text-sm">
                 Your one-stop shop for fashion, accessories, shoes, and smart devices. We bring you the

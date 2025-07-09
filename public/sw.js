@@ -1,6 +1,6 @@
 // Service Worker for Ulisha Store PWA
 
-const CACHE_NAME = 'ulisha-store-v1';
+const CACHE_NAME = 'ulisha-store-v1.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -36,10 +36,16 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache, then network, with offline fallback and WebSocket bypass
+// Fetch event - serve from cache, then network, with offline fallback
 self.addEventListener('fetch', event => {
-  // Ignore WebSocket requests
-  if (event.request.url.startsWith('ws://') || event.request.url.startsWith('wss://')) {
+  // Exclude Vite HMR WebSocket and related requests from service worker handling
+  if (
+    event.request.url.includes('vite') ||
+    event.request.url.startsWith('ws://') ||
+    event.request.url.startsWith('wss://') ||
+    !(event.request.url.startsWith('http://localhost') ||
+      event.request.url.startsWith('https://ulishastore.com'))
+  ) {
     return;
   }
 
@@ -74,11 +80,7 @@ self.addEventListener('fetch', event => {
 
             caches.open(CACHE_NAME)
               .then(cache => {
-                // Don't cache API requests
-                if (!event.request.url.includes('/api/') && 
-                    !event.request.url.includes('supabase.co')) {
-                  cache.put(event.request, responseToCache);
-                }
+                cache.put(event.request, responseToCache);
               });
 
             return response;
