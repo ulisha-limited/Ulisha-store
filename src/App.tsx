@@ -76,6 +76,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Navbar isLoggedIn={!!user} />
+        <div className="mt-28">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
@@ -136,6 +137,7 @@ function App() {
         </Routes>
         <Footer />
         <InstallPWA />
+        </div>
       </div>
     </Router>
   );

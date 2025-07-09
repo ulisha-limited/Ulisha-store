@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, LogIn, Menu, X, Heart, Home, Store, Search, ChevronDown, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -16,6 +16,9 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const location = useLocation();
   const cartItems = useCartStore((state) => state.items);
   const fetchCart = useCartStore((state) => state.fetchCart);
+
+    const [isVisible, setIsVisible] = useState(true);
+    const lastScrollY = useRef(window.scrollY);
 
   const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com'];
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -44,6 +47,25 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
     };
   }, [isProfileOpen, isSearchOpen]);
 
+    useEffect(() => {
+      const handleScroll = () => {
+        if (window.scrollY < 50) {
+          setIsVisible(true);
+          lastScrollY.current = window.scrollY;
+          return;
+        }
+        if (window.scrollY > lastScrollY.current) {
+          setIsVisible(false); // scrolling down
+        } else {
+          setIsVisible(true); // scrolling up
+        }
+        lastScrollY.current = window.scrollY;
+      };
+  
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -64,7 +86,11 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <header className="bg-[#007BFF] shadow-lg relative text-white">
+    <header
+      className={`bg-[#007BFF] shadow-lg text-white fixed w-full top-0 left-0 transition-transform duration-300 z-50 ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       {/* Top bar with contact info and social links */}
       <div className="hidden lg:block bg-[#0066CC] py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -73,15 +99,23 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <span>Free shipping on orders over ₦50,000</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
-            <a href="#" className="hover:text-primary-orange transition-colors">Track Order</a>
-            <a href="#" className="hover:text-primary-orange transition-colors">Help</a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              Track Order
+            </a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              Help
+            </a>
             <div className="h-4 w-px bg-blue-300"></div>
-            <a href="#" className="hover:text-primary-orange transition-colors">English</a>
-            <a href="#" className="hover:text-primary-orange transition-colors">NGN</a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              English
+            </a>
+            <a href="#" className="hover:text-primary-orange transition-colors">
+              NGN
+            </a>
           </div>
         </div>
       </div>
-      
+
       {/* Main navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
@@ -100,36 +134,40 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Link
               to="/"
               className={`text-white hover:text-primary-orange transition-colors font-medium ${
-                location.pathname === '/' && !location.search ? 'text-primary-orange' : ''
+                location.pathname === "/" && !location.search
+                  ? "text-primary-orange"
+                  : ""
               }`}
             >
               Home
             </Link>
-            
+
             <Link
               to="/wishlist"
               className={`text-white hover:text-primary-orange transition-colors font-medium ${
-                location.pathname === '/wishlist' ? 'text-primary-orange' : ''
+                location.pathname === "/wishlist" ? "text-primary-orange" : ""
               }`}
             >
               Wishlist
             </Link>
-            
+
             {isLoggedIn && (
               <Link
                 to="/my-store"
                 className={`text-white hover:text-primary-orange transition-colors font-medium ${
-                  location.pathname === '/my-store' ? 'text-primary-orange' : ''
+                  location.pathname === "/my-store" ? "text-primary-orange" : ""
                 }`}
               >
                 My Store
               </Link>
             )}
-            
+
             <Link
               to="/chat-support"
               className={`text-white hover:text-primary-orange transition-colors font-medium ${
-                location.pathname === '/chat-support' ? 'text-primary-orange' : ''
+                location.pathname === "/chat-support"
+                  ? "text-primary-orange"
+                  : ""
               }`}
             >
               Chat Support
@@ -146,7 +184,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               >
                 <Search className="h-5 w-5" />
               </button>
-              
+
               {isSearchOpen && (
                 <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-3 z-50">
                   <form onSubmit={handleSearch} className="flex">
@@ -168,7 +206,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </div>
               )}
             </div>
-            
+
             {/* Wishlist */}
             <Link
               to="/wishlist"
@@ -176,7 +214,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               <Heart className="h-5 w-5" />
             </Link>
-            
+
             {/* Cart */}
             <Link
               to="/cart"
@@ -189,7 +227,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </span>
               )}
             </Link>
-            
+
             {/* User profile */}
             {isLoggedIn ? (
               <div className="relative profile-menu">
@@ -199,11 +237,15 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 >
                   <User className="h-5 w-5" />
                   <span className="hidden xl:inline text-sm font-medium">
-                    {user?.user_metadata?.full_name || 'My Account'}
+                    {user?.user_metadata?.full_name || "My Account"}
                   </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      isProfileOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
-                
+
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     {isAdmin ? (
@@ -250,7 +292,9 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 className="text-white hover:text-primary-orange transition-colors flex items-center space-x-2"
               >
                 <LogIn className="h-5 w-5" />
-                <span className="hidden xl:inline text-sm font-medium">Sign In</span>
+                <span className="hidden xl:inline text-sm font-medium">
+                  Sign In
+                </span>
               </Link>
             )}
           </div>
@@ -268,19 +312,27 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </span>
               )}
             </Link>
-            
+
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-white hover:text-primary-orange transition-colors focus:outline-none"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} lg:hidden absolute w-full bg-white shadow-lg z-50`}>
+      <div
+        className={`${
+          isMenuOpen ? "block" : "hidden"
+        } lg:hidden absolute w-full bg-white shadow-lg z-50`}
+      >
         <div className="px-4 pt-4 pb-4 space-y-3">
           {/* Mobile search */}
           <form onSubmit={handleSearch} className="flex mb-4">
@@ -298,7 +350,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Search className="h-4 w-4" />
             </button>
           </form>
-          
+
           <Link
             to="/"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -307,7 +359,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Home className="h-5 w-5" />
             <span>Home</span>
           </Link>
-          
+
           <Link
             to="/wishlist"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -316,7 +368,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Heart className="h-5 w-5" />
             <span>Wishlist</span>
           </Link>
-          
+
           <Link
             to="/cart"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
@@ -325,7 +377,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
             <ShoppingCart className="h-5 w-5" />
             <span>Cart ({cartItemCount})</span>
           </Link>
-          
+
           {isLoggedIn ? (
             <>
               {isAdmin ? (
@@ -386,7 +438,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <span>Login</span>
             </Link>
           )}
-          
+
           <Link
             to="/chat-support"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
