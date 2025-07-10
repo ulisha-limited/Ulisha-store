@@ -86,7 +86,7 @@ function App() {
         v7_relativeSplatPath: true,
       }}
     >
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen ">
         <Navbar isLoggedIn={!!user} />
         <div className="mt-28">
           <Routes>

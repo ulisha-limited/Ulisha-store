@@ -45,18 +45,20 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-white flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center mb-6">
-          <ShoppingBag className="h-12 w-12 text-primary-orange" />
+    <div className="flex flex-col lg:flex-row justify-center m-5">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col justify-center min-h-[220px]">
+        <div className="flex flex-col items-center text-center mb-6 justify-center flex-1">
+          <div className="flex justify-center">
+            <ShoppingBag className="h-12 w-12 text-primary-orange" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
+            Create your UlishaStore account
+          </h2>
+          <p className="text-gray-600">Join our community today</p>
+          <p className="text-primary-orange font-medium mt-2">
+            Enjoy up to 20% discounts on all products!
+          </p>
         </div>
-        <h2 className="text-2xl sm:text-3xl text-center font-extrabold text-gray-900 mb-2">
-          Create your UlishaStore account
-        </h2>
-        <p className="text-center text-gray-600">Join our community today</p>
-        <p className="text-center text-primary-orange font-medium mt-2">
-          Enjoy up to 20% discounts on all products!
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto w-full sm:max-w-md">
@@ -66,10 +68,13 @@ export function Register() {
               {error}
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Full Name
               </label>
               <div className="mt-1 relative">
@@ -86,7 +91,10 @@ export function Register() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <div className="mt-1 relative">
@@ -103,7 +111,10 @@ export function Register() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 relative">
@@ -117,14 +128,17 @@ export function Register() {
                 />
                 <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <PasswordStrengthMeter 
-                password={password} 
+              <PasswordStrengthMeter
+                password={password}
                 onStrengthChange={setPasswordStrength}
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Confirm Password
               </label>
               <div className="mt-1 relative">
@@ -133,9 +147,9 @@ export function Register() {
                   type="password"
                   required
                   className={`pl-10 block w-full rounded-md border ${
-                    confirmPassword && password !== confirmPassword 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                      : 'border-gray-300 focus:border-primary-orange focus:ring-primary-orange'
+                    confirmPassword && password !== confirmPassword
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-primary-orange focus:ring-primary-orange"
                   } px-3 py-2 shadow-sm`}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -143,7 +157,9 @@ export function Register() {
                 <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">Passwords do not match</p>
+                <p className="mt-1 text-sm text-red-600">
+                  Passwords do not match
+                </p>
               )}
             </div>
 
@@ -155,17 +171,58 @@ export function Register() {
                 required
                 className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 rounded"
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the <a href="#" className="text-primary-orange hover:text-primary-orange/90">Terms of Service</a> and <a href="#" className="text-primary-orange hover:text-primary-orange/90">Privacy Policy</a>
+              <label
+                htmlFor="terms"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                I agree to the{" "}
+                <a
+                  href="/terms"
+                  className="text-primary-orange hover:text-primary-orange/90"
+                >
+                  Terms
+                </a>
+                ,{" "}
+                <a
+                  href="/privacy"
+                  className="text-primary-orange hover:text-primary-orange/90"
+                >
+                  Privacy
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/returns"
+                  className="text-primary-orange hover:text-primary-orange/90"
+                >
+                  Returns Policy
+                </a>
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id="subscribe"
+                name="subscribe"
+                type="checkbox"
+                required
+                className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 rounded"
+              />
+              <label
+                htmlFor="subscribe"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                I agree to receive promotional, marketing, and other
+                communications from UlishaStore.
               </label>
             </div>
 
             <button
               type="submit"
-              disabled={loading || password !== confirmPassword || passwordStrength < 3}
+              disabled={
+                loading || password !== confirmPassword || passwordStrength < 3
+              }
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-orange hover:bg-primary-orange/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-orange transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
@@ -176,8 +233,11 @@ export function Register() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-primary-orange hover:text-primary-orange/90">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="text-primary-orange hover:text-primary-orange/90"
+                  >
                     Sign in
                   </Link>
                 </span>
