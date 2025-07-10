@@ -162,7 +162,7 @@ export function AdCarousel({ className = '' }: AdCarouselProps) {
           disableOnInteraction: false,
         }}
         loop={true}
-        className="h-[200px] sm:h-[250px]"
+        className="h-[200px] sm:h-[350px]"
         onInit={(swiper) => {
           // @ts-ignore
           swiper.params.navigation.prevEl = prevRef.current;
@@ -197,13 +197,13 @@ export function AdCarousel({ className = '' }: AdCarouselProps) {
       {/* Custom navigation buttons */}
       <div 
         ref={prevRef}
-        className="absolute top-1/2 left-4 z-10 -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 rounded-full p-2 cursor-pointer transition-all"
+        className="absolute top-1/2 left-4 z-10 -translate-y-1/2 bg-white bg-opacity-10 hover:bg-opacity-50 rounded-full p-2 cursor-pointer transition-all"
       >
         <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
       </div>
       <div 
         ref={nextRef}
-        className="absolute top-1/2 right-4 z-10 -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 rounded-full p-2 cursor-pointer transition-all"
+        className="absolute top-1/2 right-4 z-10 -translate-y-1/2 bg-white bg-opacity-10 hover:bg-opacity-50 rounded-full p-2 cursor-pointer transition-all"
       >
         <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
       </div>
