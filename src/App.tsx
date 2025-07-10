@@ -18,6 +18,7 @@ import { StoreDetails } from "./pages/StoreDetails";
 import { ProductDetails } from "./pages/product/ProductDetails";
 import { Chat } from "./pages/Chat";
 import { About } from "./pages/About";
+import { Privacy } from "./pages/legal/Privacy";
 import { Terms } from "./pages/legal/Terms";
 import { Returns } from "./pages/legal/Returns";
 import { useAuthStore } from "./store/authStore";
@@ -100,6 +101,7 @@ function App() {
               element={user ? <Navigate to="/dashboard" /> : <Register />}
             />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/returns" element={<Returns />} />
             <Route

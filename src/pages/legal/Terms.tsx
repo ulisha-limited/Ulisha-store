@@ -99,5 +99,3 @@ export function Terms() {
     </div>
   );
 }
-
-export default Terms;
