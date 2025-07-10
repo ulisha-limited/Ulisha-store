@@ -1,15 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, LogIn, Menu, X, Heart, Home, Store, Search, ChevronDown, MessageCircle } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { useCartStore } from '../store/cartStore';
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  ShoppingCart,
+  User,
+  LogIn,
+  Menu,
+  X,
+  Heart,
+  Home,
+  Store,
+  Search,
+  ChevronDown,
+  MessageCircle,
+} from "lucide-react";
+import { useAuthStore } from "../store/authStore";
+import { useCartStore } from "../store/cartStore";
 
 export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
+  const [searchQuery, setSearchQuery] = useState("");
+
   const signOut = useAuthStore((state) => state.signOut);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
@@ -17,11 +29,15 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const cartItems = useCartStore((state) => state.items);
   const fetchCart = useCartStore((state) => state.fetchCart);
 
-    const [isVisible, setIsVisible] = useState(true);
-    const lastScrollY = useRef(window.scrollY);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(window.scrollY);
 
-  const ADMIN_EMAILS = ['paulelite606@gmail.com', 'obajeufedo2@gmail.com'];
+  const ADMIN_EMAILS = ["paulelite606@gmail.com", "obajeufedo2@gmail.com"];
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -33,45 +49,45 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
     // Close dropdowns when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.profile-menu') && isProfileOpen) {
+      if (!target.closest(".profile-menu") && isProfileOpen) {
         setIsProfileOpen(false);
       }
-      if (!target.closest('.search-container') && isSearchOpen) {
+      if (!target.closest(".search-container") && isSearchOpen) {
         setIsSearchOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isProfileOpen, isSearchOpen]);
 
-    useEffect(() => {
-      const handleScroll = () => {
-        if (window.scrollY < 50) {
-          setIsVisible(true);
-          lastScrollY.current = window.scrollY;
-          return;
-        }
-        if (window.scrollY > lastScrollY.current) {
-          setIsVisible(false); // scrolling down
-        } else {
-          setIsVisible(true); // scrolling up
-        }
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY < 50) {
+        setIsVisible(true);
         lastScrollY.current = window.scrollY;
-      };
-  
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+        return;
+      }
+      if (window.scrollY > lastScrollY.current) {
+        setIsVisible(false); // scrolling down
+      } else {
+        setIsVisible(true); // scrolling up
+      }
+      lastScrollY.current = window.scrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -83,9 +99,12 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
     }
   };
 
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
-  if (['/login', '/register', '/forgot-password'].includes(location.pathname))
+  if (["/login", "/register", "/forgot-password"].includes(location.pathname))
     return null; // Don't show navbar on these pages
 
   return (
