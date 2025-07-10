@@ -85,6 +85,9 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
+  if (['/login', '/register', '/forgot-password'].includes(location.pathname))
+    return null; // Don't show navbar on these pages
+
   return (
     <header
       className={`bg-[#007BFF] shadow-lg text-white fixed w-full top-0 left-0 transition-transform duration-300 z-50 ${

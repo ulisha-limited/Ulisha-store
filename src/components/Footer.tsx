@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Search, ChevronDown, Facebook, Twitter, Instagram, Youtube, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 
 function Footer() {
     const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
+  const location = useLocation();
 
     useEffect(() => {
-        fetchCategories();
+        if (
+          !["/login", "/register", "/forgot-password"].includes(
+            location.pathname
+          )
+        )
+          fetchCategories();
     }, []);
+
+    if (["/login", "/register", "/forgot-password"].includes(location.pathname))
+      return null; // Don't show navbar on these pages
 
     async function fetchCategories() {
         const { data, error } = await supabase

@@ -27,18 +27,20 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-white flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center mb-6">
-          <ShoppingBag className="h-12 w-12 text-primary-orange" />
+    <div className="flex flex-col lg:flex-row justify-center m-5">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col justify-center min-h-[220px]">
+        <div className="flex flex-col items-center text-center mb-6 justify-center flex-1">
+          <div className="flex justify-center">
+            <ShoppingBag className="h-12 w-12 text-primary-orange" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
+            Hello, welcome back to UlishaStore
+          </h2>
+          <p className="text-gray-600">Sign in to your account</p>
+          <p className="text-primary-orange font-medium mt-2">
+            Enjoy up to 20% discounts on all products!
+          </p>
         </div>
-        <h2 className="text-2xl sm:text-3xl text-center font-extrabold text-gray-900 mb-2">
-          Welcome back to UlishaStore
-        </h2>
-        <p className="text-center text-gray-600">Sign in to your account</p>
-        <p className="text-center text-primary-orange font-medium mt-2">
-          Enjoy up to 20% discounts on all products!
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto w-full sm:max-w-md">
@@ -48,10 +50,13 @@ export function Login() {
               {error}
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <div className="mt-1 relative">
@@ -68,7 +73,10 @@ export function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 relative">
@@ -92,13 +100,19 @@ export function Login() {
                   type="checkbox"
                   className="h-4 w-4 text-primary-orange focus:ring-primary-orange border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-700"
+                >
                   Remember me
                 </label>
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-primary-orange hover:text-primary-orange/90">
+                <a
+                  href="#"
+                  className="font-medium text-primary-orange hover:text-primary-orange/90"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -109,7 +123,7 @@ export function Login() {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-orange hover:bg-primary-orange/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-orange transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
@@ -120,8 +134,11 @@ export function Login() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  Don't have an account?{' '}
-                  <Link to="/register" className="text-primary-orange hover:text-primary-orange/90">
+                  Don't have an account?{" "}
+                  <Link
+                    to="/register"
+                    className="text-primary-orange hover:text-primary-orange/90"
+                  >
                     Sign up
                   </Link>
                 </span>
