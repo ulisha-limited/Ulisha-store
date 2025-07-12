@@ -12,6 +12,9 @@ import {
   Search,
   ChevronDown,
   MessageCircle,
+  LayoutDashboard,
+  Settings,
+  LogOut
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCartStore } from "../store/cartStore";
@@ -97,6 +100,10 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
       navigate(`/?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
     }
+  };
+
+  const getInitials = (name: string) => {
+    return name ? name.charAt(0).toUpperCase() : "";
   };
 
   const cartItemCount = cartItems.reduce(
@@ -257,53 +264,45 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="text-white hover:text-primary-orange transition-colors focus:outline-none flex items-center space-x-2"
                 >
-                  <User className="h-5 w-5" />
-                  <span className="hidden xl:inline text-sm font-medium">
-                    {user?.user_metadata?.full_name || "My Account"}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isProfileOpen ? "rotate-180" : ""
-                    }`}
-                  />
+                  <div
+                    className="rounded-full bg-primary-orange flex items-center justify-center"
+                    style={{ width: "40px", height: "40px", color: "white" }}
+                  >
+                    {getInitials(user?.user_metadata?.full_name)}
+                  </div>
                 </button>
 
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    {isAdmin ? (
+                    {isAdmin && (
                       <Link
                         to="/admin"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                       >
-                        Admin Panel
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Dashboard</span>
                       </Link>
-                    ) : (
-                      <>
-                        <Link
-                          to="/dashboard"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          My Orders
-                        </Link>
-                        <Link
-                          to="/my-store"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          My Store
-                        </Link>
-                      </>
                     )}
                     <Link
-                      to="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      to="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                     >
-                      Settings
+                      <ShoppingCart className="h-4 w-4" />
+                      <span>My Orders</span>
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                     >
-                      Logout
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
                     </button>
                   </div>
                 )}

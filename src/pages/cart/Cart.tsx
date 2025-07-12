@@ -407,10 +407,10 @@ export function Cart() {
                     if (!item.product) return null;
                     
                     return (
-                      <div
+                        <div
                         key={item.id}
-                        className="flex items-center justify-between border-b pb-4"
-                      >
+                        className="flex flex-col sm:flex-row justify-between border-b pb-4"
+                        >
                         <div className="flex items-center space-x-4">
                           <img
                             src={item.product.image}
@@ -436,7 +436,7 @@ export function Cart() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 self-center sm:self-auto mt-4 sm:mt-0">
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
