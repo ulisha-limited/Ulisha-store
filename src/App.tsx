@@ -26,6 +26,7 @@ import { supabase } from "./lib/supabase";
 import { InstallPWA } from "./components/InstallPWA";
 import { useAnalytics } from "./hooks/useAnalytics";
 import { ProductList } from "./pages/categories/ProductList";
+import { Search } from "./pages/Search";
 import Footer from "./components/Footer";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -136,6 +137,7 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route path="/search" element={<Search />} />
             <Route path="/store/:storeId" element={<StoreDetails />} />
             <Route path="/category/:category" element={<ProductList />} />
             <Route path="/product/:productId" element={<ProductDetails />} />
