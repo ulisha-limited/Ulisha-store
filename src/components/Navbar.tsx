@@ -97,7 +97,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
     }
   };
@@ -159,8 +159,8 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           </div>
 
           {/* Desktop navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
-            <Link
+          <div className="hidden lg:flex items-center me-auto space-x-5 ml-4">
+            {/* <Link
               to="/"
               className={`text-white hover:text-primary-orange transition-colors font-medium ${
                 location.pathname === "/" && !location.search
@@ -200,19 +200,28 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               }`}
             >
               Chat Support
-            </Link>
+            </Link> */}
           </div>
 
           {/* Desktop right section */}
           <div className="hidden lg:flex items-center space-x-6">
             {/* Search button */}
             <div className="relative search-container">
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-white hover:text-primary-orange transition-colors focus:outline-none"
-              >
-                <Search className="h-5 w-5" />
-              </button>
+              <form onSubmit={handleSearch} className="flex">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  className="w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-orange text-gray-700"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="bg-primary-orange text-white px-3 py-2 rounded-r-md hover:bg-primary-orange/90"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </form>
 
               {isSearchOpen && (
                 <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-3 z-50">

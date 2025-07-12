@@ -1,28 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { ProductCard } from '../../components/ProductCard';
-import { AdCarousel } from '../../components/AdCarousel';
-import { PromoPopup } from '../../components/PromoPopup';
-import { Search, ChevronDown, Facebook, Twitter, Instagram, Youtube, Phone } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import type { Product } from '../../types';
-import { useLocation, Link, useParams } from 'react-router-dom';
-import { fallbackProducts } from '../../lib/supabase';
-import { usePromoPopup } from '../../hooks/usePromoPopup';
-
-const categories = [
-  'All Categories', 
-  'Clothes', 
-  'Accessories', 
-  'Shoes', 
-  'Smart Watches', 
-  'Electronics',
-  'Perfumes & Body Spray',
-  'Phones',
-  'Handbags',
-  'Jewelries',
-  'Gym Wear'
-  
-];
+import React, { useState, useEffect } from "react";
+import { ProductCard } from "../../components/ProductCard";
+import { Search } from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import type { Product } from "../../types";
+import { useLocation, Link, useParams } from "react-router-dom";
+import { fallbackProducts } from "../../lib/supabase";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
@@ -36,40 +18,9 @@ export function ProductList() {
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
 
-  // Promo popup hook
-  const { showPopup, closePopup } = usePromoPopup();
-
   useEffect(() => {
     fetchProductsWithRetry();
-
-    // Parse URL parameters
-    const params = new URLSearchParams(location.search);
-    const searchParam = params.get("search");
-
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-
-    // Subscribe to product changes
-    const productsSubscription = supabase
-      .channel("products-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "products",
-        },
-        () => {
-          fetchProductsWithRetry();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(productsSubscription);
-    };
-  }, [location.search, category]);
+  }, [category]);
 
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
@@ -153,43 +104,6 @@ export function ProductList() {
     <>
       <div className="min-h-screen bg-gray-100 flex flex-col">
         <div className="flex-grow">
-          {/* Add contact banner */}
-          <div className="bg-primary-orange text-white py-2">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-center sm:justify-end space-x-4 text-sm">
-                <a
-                  href="tel:+2347060438205"
-                  className="flex items-center hover:text-white/90 transition-colors"
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  <span>Call to place order: +234 913 478 1219</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Ad Carousel */}
-          <AdCarousel />
-
-           <div 
-              className="bg-white shadow-sm sticky top-0 z-30 transition-all"
-              id="products-section"
-              >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                </div>
-                </div>
-              </div>
-          </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex items-center justify-between mb-6">
@@ -245,9 +159,6 @@ export function ProductList() {
           </div>
         </div>
       </div>
-
-      {/* Promotional Popup */}
-      <PromoPopup isVisible={showPopup} onClose={closePopup} />
     </>
   );
 }
