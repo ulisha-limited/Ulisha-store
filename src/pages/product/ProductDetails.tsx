@@ -15,7 +15,7 @@ interface ProductVariant {
   stock: number;
 }
 
-export function ProductDetails() {
+export default function ProductDetails() {
   const { productId } = useParams<{ productId: string }>();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);

@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,27 +6,27 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
-import { Home } from "./pages/Home";
-import { Login } from "./pages/auth/Login";
-import { Register } from "./pages/auth/Register";
-import { Orders } from "./pages/user/Orders";
-import { Settings } from "./pages/user/Settings";
-import { Cart } from "./pages/cart/Cart";
-import { ProductDetails } from "./pages/product/ProductDetails";
-import { Chat } from "./pages/Chat";
-import { About } from "./pages/About";
-import { Privacy } from "./pages/legal/Privacy";
-import { Terms } from "./pages/legal/Terms";
-import { Returns } from "./pages/legal/Returns";
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const Orders = lazy(() => import("./pages/user/Orders"));
+const Settings = lazy(() => import("./pages/user/Settings"));
+const Cart = lazy(() => import("./pages/cart/Cart"));
+const ProductDetails = lazy(() => import("./pages/product/ProductDetails"));
+const Chat = lazy(() => import("./pages/Chat"));
+const About = lazy(() => import("./pages/About"));
+const Privacy = lazy(() => import("./pages/legal/Privacy"));
+const Terms = lazy(() => import("./pages/legal/Terms"));
+const Returns = lazy(() => import("./pages/legal/Returns"));
+const ProductList = lazy(() => import("./pages/categories/ProductList"));
+const Search = lazy(() => import("./pages/Search"));
+import Footer from "./components/Footer";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminAuth from "./auth/AdminAuth";
 import { useAuthStore } from "./store/authStore";
 import { supabase } from "./lib/supabase";
 import { InstallPWA } from "./components/InstallPWA";
 import { useAnalytics } from "./hooks/useAnalytics";
-import { ProductList } from "./pages/categories/ProductList";
-import { Search } from "./pages/Search";
-import Footer from "./components/Footer";
-import AdminLayout from "./layouts/AdminLayout";
-import AdminAuth from "./auth/AdminAuth";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);

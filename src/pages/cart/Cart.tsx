@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabase';
 const DELIVERY_FEE = 4000; // ₦4,000
 const FREE_DELIVERY_THRESHOLD = 50000; // ₦50,000
 
-export function Cart() {
+export default function Cart() {
   const { items, removeFromCart, updateQuantity, loading, fetchCart, clearCart } = useCartStore();
   const user = useAuthStore((state) => state.user);
   const { formatPrice, convertPrice, currency } = useCurrencyStore();

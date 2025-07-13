@@ -24,7 +24,7 @@ interface AffiliateReferral {
   created_at: string;
 }
 
-export function Affiliate() {
+export default function Affiliate() {
   const [loading, setLoading] = useState(true);
   const [affiliateAccount, setAffiliateAccount] = useState<AffiliateAccount | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);

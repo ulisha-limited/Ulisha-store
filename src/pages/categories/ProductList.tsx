@@ -9,7 +9,7 @@ import { fallbackProducts } from "../../lib/supabase";
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
-export function ProductList() {
+export default function ProductList() {
   const { category } = useParams<{ category: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);

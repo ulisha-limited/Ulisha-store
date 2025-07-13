@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, User } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
-export function Chat() {
+export default function Chat() {
   const [messages, setMessages] = useState<Array<{
     id: string;
     text: string;

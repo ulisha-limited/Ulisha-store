@@ -5,7 +5,7 @@ import { useCurrencyStore } from '../../store/currencyStore';
 import { supabase } from '../../lib/supabase';
 import { OtpInput } from '../../components/OtpInput';
 
-export function Settings() {
+export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState({
     orderUpdates: true,
