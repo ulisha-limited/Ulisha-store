@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,12 +9,9 @@ import { Navbar } from "./components/Navbar";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
-import { Dashboard } from "./pages/user/Dashboard";
+import { Orders } from "./pages/user/Orders";
 import { Settings } from "./pages/user/Settings";
-import { Dashboard as AdminDashboard } from "./pages/user/admin/Dashboard";
 import { Cart } from "./pages/cart/Cart";
-import { MyStore } from "./pages/user/admin/MyStore";
-import { StoreDetails } from "./pages/StoreDetails";
 import { ProductDetails } from "./pages/product/ProductDetails";
 import { Chat } from "./pages/Chat";
 import { About } from "./pages/About";
@@ -28,17 +25,12 @@ import { useAnalytics } from "./hooks/useAnalytics";
 import { ProductList } from "./pages/categories/ProductList";
 import { Search } from "./pages/Search";
 import Footer from "./components/Footer";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminAuth from "./auth/AdminAuth";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
   return user ? <>{children}</> : <Navigate to="/login" />;
-}
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const adminEmails = ["paulelite606@gmail.com", "obajeufedo2@gmail.com"];
-  const isAdmin = user?.email && adminEmails.includes(user.email);
-  return isAdmin ? <>{children}</> : <Navigate to="/" />;
 }
 
 function App() {
@@ -91,66 +83,61 @@ function App() {
       <div className="min-h-screen ">
         <Navbar isLoggedIn={!!user} />
         <div className="mt-28">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/login"
-              element={user ? <Navigate to="/dashboard" /> : <Login />}
-            />
-            <Route
-              path="/register"
-              element={user ? <Navigate to="/dashboard" /> : <Register />}
-            />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/returns" element={<Returns />} />
-            <Route
-              path="/cart"
-              element={
-                <PrivateRoute>
-                  <Cart />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <PrivateRoute>
-                  <Settings />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/my-store"
-              element={
-                <PrivateRoute>
-                  <MyStore />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/search" element={<Search />} />
-            <Route path="/store/:storeId" element={<StoreDetails />} />
-            <Route path="/category/:category" element={<ProductList />} />
-            <Route path="/product/:productId" element={<ProductDetails />} />
-            <Route path="/chat-support" element={<Chat />} />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              }
-            />
-          </Routes>
+          <Suspense
+            fallback={
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="loader">Loading...</div>
+              </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/login"
+                element={user ? <Navigate to="/dashboard" /> : <Login />}
+              />
+              <Route
+                path="/register"
+                element={user ? <Navigate to="/dashboard" /> : <Register />}
+              />
+              <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/returns" element={<Returns />} />
+              <Route
+                path="/cart"
+                element={
+                  <PrivateRoute>
+                    <Cart />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <PrivateRoute>
+                    <Orders />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <PrivateRoute>
+                    <Settings />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/search" element={<Search />} />
+              <Route path="/category/:category" element={<ProductList />} />
+              <Route path="/product/:productId" element={<ProductDetails />} />
+              <Route path="/chat-support" element={<Chat />} />
+
+              <Route element={<AdminAuth />}>
+                <Route path="/dashboard/*" element={<AdminLayout />} />
+              </Route>
+            </Routes>
+          </Suspense>
           <Footer />
           <InstallPWA />
         </div>
