@@ -22,16 +22,12 @@ const ProductList = lazy(() => import("./pages/categories/ProductList"));
 const Search = lazy(() => import("./pages/Search"));
 import Footer from "./components/Footer";
 import AdminLayout from "./layouts/AdminLayout";
-import AdminAuth from "./auth/AdminAuth";
+import Auth from "./auth/Auth";
 import { useAuthStore } from "./store/authStore";
 import { supabase } from "./lib/supabase";
 import { InstallPWA } from "./components/InstallPWA";
 import { useAnalytics } from "./hooks/useAnalytics";
-
-function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  return user ? <>{children}</> : <Navigate to="/login" />;
-}
+import Page404 from "./pages/errors/Page404";
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
@@ -94,50 +90,35 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route
                 path="/login"
-                element={user ? <Navigate to="/dashboard" /> : <Login />}
+                element={user ? <Navigate to="/" replace /> : <Login />}
               />
               <Route
                 path="/register"
-                element={user ? <Navigate to="/dashboard" /> : <Register />}
+                element={user ? <Navigate to="/" replace /> : <Register />}
               />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/returns" element={<Returns />} />
-              <Route
-                path="/cart"
-                element={
-                  <PrivateRoute>
-                    <Cart />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <PrivateRoute>
-                    <Orders />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <PrivateRoute>
-                    <Settings />
-                  </PrivateRoute>
-                }
-              />
               <Route path="/search" element={<Search />} />
               <Route path="/category/:category" element={<ProductList />} />
               <Route path="/product/:productId" element={<ProductDetails />} />
               <Route path="/chat-support" element={<Chat />} />
 
-              <Route element={<AdminAuth />}>
+              <Route element={<Auth />}>
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
+
+              <Route element={<Auth isAdmin={true} />}>
                 <Route path="/dashboard/*" element={<AdminLayout />} />
               </Route>
+
+              <Route path="*" element={<Page404 />} />
             </Routes>
           </Suspense>
+
           <Footer />
           <InstallPWA />
         </div>
