@@ -33,7 +33,7 @@ const categories = [
 
 const PAGE_SIZE = 10;
 
-export function Home() {
+export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

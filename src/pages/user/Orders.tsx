@@ -28,7 +28,7 @@ interface Order {
   items: OrderItem[];
 }
 
-export function Orders() {
+export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);

@@ -7,7 +7,7 @@ import { fallbackProducts } from "../lib/supabase";
 
 const PAGE_SIZE = 10;
 
-export function Search() {
+export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
