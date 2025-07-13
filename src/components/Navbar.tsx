@@ -14,7 +14,8 @@ import {
   MessageCircle,
   LayoutDashboard,
   Settings,
-  LogOut
+  LogOut,
+  LayoutDashboardIcon,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCartStore } from "../store/cartStore";
@@ -285,7 +286,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     {isAdmin && (
                       <Link
-                        to="/admin"
+                        to="/dashboard"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                       >
                         <LayoutDashboard className="h-4 w-4" />
@@ -293,7 +294,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                       </Link>
                     )}
                     <Link
-                      to="/dashboard"
+                      to="/orders"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                     >
                       <ShoppingCart className="h-4 w-4" />
@@ -382,15 +383,6 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           </form>
 
           <Link
-            to="/"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            <Home className="h-5 w-5" />
-            <span>Home</span>
-          </Link>
-
-          <Link
             to="/wishlist"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
             onClick={() => setIsMenuOpen(false)}
@@ -410,41 +402,30 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           {isLoggedIn ? (
             <>
-              {isAdmin ? (
+              {isAdmin && (
                 <Link
                   to="/admin"
                   className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <User className="h-5 w-5" />
-                  <span>Admin Panel</span>
+                  <LayoutDashboard className="h-5 w-5" />
+                  <span>Dashboard</span>
                 </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-5 w-5" />
-                    <span>My Orders</span>
-                  </Link>
-                  <Link
-                    to="/my-store"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Store className="h-5 w-5" />
-                    <span>My Store</span>
-                  </Link>
-                </>
               )}
+              <Link
+                to="/orders"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <span>My Orders</span>
+              </Link>
               <Link
                 to="/settings"
                 className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <User className="h-5 w-5" />
+                <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </Link>
               <button
@@ -468,15 +449,6 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <span>Login</span>
             </Link>
           )}
-
-          <Link
-            to="/chat-support"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            <MessageCircle className="h-5 w-5" />
-            <span>Chat Support</span>
-          </Link>
         </div>
       </div>
     </header>
