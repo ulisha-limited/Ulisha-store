@@ -490,7 +490,7 @@ export default function Products() {
                   <option value="Smart Watches">Smart Watches</option>
                   <option value="Electronics">Electronics</option>
                   <option value="Perfumes & Body Spray">
-                    Perfumes & Body Spray
+                    Perfumes Body Spray
                   </option>
                   <option value="Phones">Phones</option>
                   <option value="Handbags">Handbags</option>
