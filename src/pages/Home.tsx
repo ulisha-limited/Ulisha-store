@@ -24,7 +24,7 @@ const categories = [
   "Shoes",
   "Smart Watches",
   "Electronics",
-  "Perfumes & Body Spray",
+  "Perfumes Body Spray",
   "Phones",
   "Handbags",
   "Jewelries",
@@ -75,7 +75,8 @@ export default function Home() {
     // eslint-disable-next-line
   }, [hasMore, loading, isFetchingMore, page]);
 
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   const fetchProductsPage = async (pageToFetch: number, isInitial: boolean) => {
     if (!isInitial) setIsFetchingMore(true);
@@ -104,7 +105,9 @@ export default function Home() {
         setHasMore(false);
       }
     } catch (error) {
-      setError("Unable to load products. Please check your connection and try again.");
+      setError(
+        "Unable to load products. Please check your connection and try again."
+      );
       if (isInitial) {
         setProducts(fallbackProducts);
         setUsesFallback(true);
@@ -115,7 +118,6 @@ export default function Home() {
       setIsFetchingMore(false);
     }
   };
-
 
   return (
     <>
@@ -141,9 +143,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold text-gray-900">
-                New items 
-              </h1>
+              <h1 className="text-xl font-bold text-gray-900">New items</h1>
             </div>
 
             {error && (
@@ -187,7 +187,9 @@ export default function Home() {
                   </div>
                 )}
                 {!hasMore && products.length > 0 && (
-                  <div className="text-center py-4 text-gray-500">No more products to load.</div>
+                  <div className="text-center py-4 text-gray-500">
+                    No more products to load.
+                  </div>
                 )}
                 {products.length === 0 && !loading && (
                   <div className="text-center py-12">
