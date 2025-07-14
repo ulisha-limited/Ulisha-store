@@ -25,10 +25,11 @@ export default defineConfig({
         entryFileNames: "assets/[hash].js",
         chunkFileNames: "assets/[hash].js",
         assetFileNames: "assets/[hash].[ext]",
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "ui-vendor": ["lucide-react", "swiper"],
-          "payment-vendor": ["@coinbase/cbpay-js", "flutterwave-react-v3"],
+        manualChunks(id) {
+          // this thing fixes issues with vite build minif of sentry
+          if (id.includes("node_modules") && !id.includes("sentry")) {
+            return id.toString().split("node_modules/")[1].split("/")[0];
+          }
         },
       },
     },

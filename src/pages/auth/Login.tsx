@@ -18,7 +18,7 @@ export default function Login() {
 
     try {
       await signIn(email, password);
-      navigate('/dashboard');
+      navigate('/', { replace: true });
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign in. Please try again.');
     } finally {
