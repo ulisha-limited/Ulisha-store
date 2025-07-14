@@ -36,7 +36,7 @@ export default function Register() {
 
     try {
       await signUp(email, password, name);
-      navigate('/dashboard');
+      navigate("/", { replace: true });
     } catch (err: any) {
       setError(err.message || 'An error occurred during registration');
     } finally {
