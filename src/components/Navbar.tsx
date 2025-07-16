@@ -284,6 +284,13 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <Link
+                      to="/"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <Home className="h-4 w-4" />
+                      <span>Home</span>
+                    </Link>
                     {isAdmin && (
                       <Link
                         to="/dashboard"
@@ -293,6 +300,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                         <span>Dashboard</span>
                       </Link>
                     )}
+
                     <Link
                       to="/orders"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
@@ -381,7 +389,14 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Search className="h-4 w-4" />
             </button>
           </form>
-
+          <Link
+            to="/"
+            className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <Home className="h-5 w-5" />
+            <span>Home</span>
+          </Link>
           <Link
             to="/wishlist"
             className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-600 hover:text-primary-orange hover:bg-gray-50"
