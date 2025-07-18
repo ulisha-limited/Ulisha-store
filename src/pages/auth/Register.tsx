@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ShoppingBag } from 'lucide-react';
+import { Mail, Lock, User, ShoppingBag, Chrome, Monitor } from 'lucide-react'; // Import Chrome and Monitor icons
 import { useAuthStore } from '../../store/authStore';
 import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter';
 
@@ -12,7 +12,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  
+
   const navigate = useNavigate();
   const signUp = useAuthStore((state) => state.signUp);
 
@@ -43,6 +43,20 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  // --- New Handlers for Social Sign-up (Placeholder) ---
+  const handleGoogleSignUp = () => {
+    console.log('Initiating Google Sign-up...');
+    // Implement your Google authentication logic for sign-up here
+    // This typically involves redirecting to Google's OAuth flow
+  };
+
+  const handleMicrosoftSignUp = () => {
+    console.log('Initiating Microsoft Sign-up...');
+    // Implement your Microsoft authentication logic for sign-up here
+    // This typically involves redirecting to Microsoft's OAuth flow
+  };
+  // --- End New Handlers ---
 
   return (
     <div className="flex flex-col lg:flex-row justify-center m-5">
@@ -225,6 +239,42 @@ export default function Register() {
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
+
+          {/* --- New Social Sign-up Section --- */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Or sign up with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div>
+                <button
+                  onClick={handleGoogleSignUp}
+                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <Chrome  className="h-5 w-5 mr-2" />
+                  <span>Sign up with Google</span>
+                </button>
+              </div>
+              <div>
+                <button
+                  onClick={handleMicrosoftSignUp}
+                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <Monitor className="h-5 w-5 mr-2" />
+                  <span>Sign up with Microsoft</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          {/* --- End Social Sign-up Section --- */}
 
           <div className="mt-6">
             <div className="relative">

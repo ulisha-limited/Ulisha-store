@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Trash2,
   Minus,
@@ -8,7 +8,6 @@ import {
   ShoppingBag,
   Loader,
   Truck,
-  X,
   MessageCircle,
   Info,
   AlertCircle,
@@ -23,19 +22,30 @@ import { supabase } from "../../lib/supabase";
 const DELIVERY_FEE = 4000; // ₦4,000
 const FREE_DELIVERY_THRESHOLD = 50000; // ₦50,000
 
+// Define a type for your address structure from 'user_addresses' table
+interface UserAddress {
+  id: string;
+  user_id: string;
+  full_name: string;
+  phone_number: string;
+  street_address: string;
+  city: string;
+  state_province: string;
+  // Add any other address fields you have, e.g., 'zip_code', 'country'
+}
+
 export default function Cart() {
   const {
     items,
     removeFromCart,
     updateQuantity,
-    loading,
+    loading: cartLoading,
     fetchCart,
     clearCart,
   } = useCartStore();
   const user = useAuthStore((state) => state.user);
-  const { formatPrice, convertPrice, currency } = useCurrencyStore();
+  const { formatPrice, currency } = useCurrencyStore();
   const navigate = useNavigate();
-  const location = useLocation();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
@@ -44,49 +54,76 @@ export default function Cart() {
     "full"
   );
   const [error, setError] = useState<string | null>(null);
+  const [userAddresses, setUserAddresses] = useState<UserAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
 
   const canCheckout = items.length >= 2; // Minimum 2 items required for checkout
 
-  // Delivery details state
+  // Delivery details state - now derived from selectedAddress
   const [deliveryDetails, setDeliveryDetails] = useState({
     name: "",
     phone: "",
-    address: "",
-    state: "",
+    address: "", // Combines street_address, city
+    state: "", // Holds state_province
   });
 
+  // Fetch cart and user addresses on component mount or user change
   useEffect(() => {
     if (user) {
       fetchCart();
+      fetchUserAddresses();
     }
   }, [user, fetchCart]);
 
+  // Update deliveryDetails when selectedAddressId or userAddresses change
   useEffect(() => {
-    // Check if we're returning from a redirect payment
+    const selectedAddress = userAddresses.find(
+      (address) => address.id === selectedAddressId
+    );
+    if (selectedAddress) {
+      setDeliveryDetails({
+        name: selectedAddress.full_name,
+        phone: selectedAddress.phone_number,
+        address: `${selectedAddress.street_address}, ${selectedAddress.city}`,
+        state: selectedAddress.state_province,
+      });
+    } else {
+      // Clear delivery details if no address is selected or found
+      setDeliveryDetails({
+        name: "",
+        phone: "",
+        address: "",
+        state: "",
+      });
+    }
+  }, [selectedAddressId, userAddresses]);
+
+  // Handle payment success redirect from Flutterwave
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get("payment_success");
 
     if (paymentSuccess === "true") {
-      // Clear the URL parameters
+      // Clear the URL parameters to prevent re-triggering on refresh
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      // Clear the cart
       clearCart().catch((err) => console.error("Error clearing cart:", err));
 
-      // Show success message and redirect to dashboard
       showNotification(
         "Payment successful! Your order has been placed.",
         "success"
       );
-      navigate("/dashboard");
+      navigate("/dashboard"); // Redirect to a success page or dashboard
     }
   }, [navigate, clearCart]);
 
-  // Listen for currency changes
+  // Listen for currency changes (if this is a custom event)
   useEffect(() => {
     const handleCurrencyChange = () => {
-      // Force re-render by updating a state
-      setCheckoutLoading(false);
+      // Force re-render by updating a state (e.g., re-evaluating price displays)
+      setCheckoutLoading(false); // A simple way to trigger re-render
     };
 
     window.addEventListener("currencyChange", handleCurrencyChange);
@@ -94,32 +131,50 @@ export default function Cart() {
       window.removeEventListener("currencyChange", handleCurrencyChange);
   }, []);
 
+  const fetchUserAddresses = useCallback(async () => {
+    if (!user?.id) {
+      setUserAddresses([]);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from("user_addresses") // Ensure this table exists and has 'user_id', 'full_name', 'phone_number', 'street_address', 'city', 'state_province'
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setUserAddresses(data || []);
+      // Automatically select the first address if available and none is selected yet
+      if (data && data.length > 0 && !selectedAddressId) {
+        setSelectedAddressId(data[0].id);
+      }
+    } catch (error: any) {
+      console.error("Error fetching user addresses:", error.message);
+      setError("Failed to load your addresses. Please try again.");
+    }
+  }, [user, selectedAddressId]); // Added selectedAddressId to dependencies to avoid stale closure if it changes externally
+
   const subtotal = items.reduce((sum, item) => {
     if (item.product) {
       return sum + item.product.price * item.quantity;
     }
-    return sum;
+    return 0; // Return 0 for items without a product to prevent NaN
   }, 0);
 
-  // Calculate delivery fee - free if subtotal is above threshold
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
 
-  // Calculate totals based on payment option
-  const getPaymentAmount = () => {
+  const getPaymentAmount = useCallback(() => {
     if (paymentOption === "partial") {
-      return subtotal; // Pay only for products, delivery fee on arrival
+      return subtotal;
     }
-    return subtotal + deliveryFee; // Pay full amount including delivery
-  };
+    return subtotal + deliveryFee;
+  }, [paymentOption, subtotal, deliveryFee]);
 
   const total = subtotal + deliveryFee;
   const paymentAmount = getPaymentAmount();
-
-  // Convert prices for display
-  const convertedSubtotal = convertPrice(subtotal);
-  const convertedDeliveryFee = convertPrice(deliveryFee);
-  const convertedTotal = convertPrice(total);
-  const convertedFreeThreshold = convertPrice(FREE_DELIVERY_THRESHOLD);
 
   const handleQuantityChange = async (
     productId: string,
@@ -130,6 +185,7 @@ export default function Cart() {
       await updateQuantity(productId, newQuantity);
     } catch (error) {
       console.error("Error updating quantity:", error);
+      showNotification("Failed to update quantity.", "error");
     }
   };
 
@@ -138,6 +194,7 @@ export default function Cart() {
       await removeFromCart(productId);
     } catch (error) {
       console.error("Error removing item:", error);
+      showNotification("Failed to remove item from cart.", "error");
     }
   };
 
@@ -145,33 +202,26 @@ export default function Cart() {
     try {
       setError(null);
 
-      // Validate required fields
       if (
+        !selectedAddressId ||
         !deliveryDetails.name ||
         !deliveryDetails.phone ||
         !deliveryDetails.address ||
         !deliveryDetails.state
       ) {
-        throw new Error("Please fill in all delivery details");
+        throw new Error("Please select a valid delivery address to proceed.");
       }
 
       if (items.length === 0) {
-        throw new Error("Cart is empty");
+        throw new Error(
+          "Your cart is empty. Please add items before checking out."
+        );
       }
 
       if (!user?.id) {
-        throw new Error("User not authenticated");
+        throw new Error("User not authenticated. Please log in.");
       }
 
-      console.log("Creating order with details:", {
-        user_id: user.id,
-        total: total,
-        delivery_fee: deliveryFee,
-        payment_option: paymentOption,
-        items_count: items.length,
-      });
-
-      // Prepare cart items for order creation
       const cartItems = items.map((item) => ({
         product_id: item.product_id,
         quantity: item.quantity,
@@ -181,9 +231,8 @@ export default function Cart() {
         selected_size: item.selected_size || null,
       }));
 
-      // Use the improved order creation function
       const { data: newOrderId, error: orderError } = await supabase.rpc(
-        "create_order_with_items",
+        "create_order_with_items", // Ensure this Supabase function exists and is up-to-date
         {
           p_user_id: user.id,
           p_total: total,
@@ -193,48 +242,40 @@ export default function Cart() {
           p_delivery_name: deliveryDetails.name,
           p_delivery_phone: deliveryDetails.phone,
           p_delivery_address: `${deliveryDetails.address}, ${deliveryDetails.state}`,
-          p_payment_method: "flutterwave",
+          p_payment_method: "flutterwave", // This should probably be dynamic or set after successful payment
           p_cart_items: JSON.stringify(cartItems),
         }
       );
 
       if (orderError) {
-        console.error("Order creation error:", orderError);
+        console.error("Supabase Order creation error:", orderError);
         throw new Error(`Failed to create order: ${orderError.message}`);
       }
 
       if (!newOrderId) {
-        throw new Error("Order creation failed - no order ID returned");
+        throw new Error(
+          "Order creation failed - no order ID returned from Supabase."
+        );
       }
 
-      console.log("Order created successfully:", newOrderId);
       return newOrderId;
-    } catch (error) {
-      console.error("Error creating order:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to create order"
-      );
+    } catch (error: any) {
+      console.error("Error in createOrder:", error);
+      setError(error.message);
       throw error;
     }
   };
 
   const handleFlutterwaveInit = async () => {
+    setCheckoutLoading(true);
+    setError(null);
     try {
-      setCheckoutLoading(true);
-      setError(null);
-
       const newOrderId = await createOrder();
       setOrderId(newOrderId);
-      return newOrderId;
-    } catch (error) {
-      console.error("Error initializing payment:", error);
+      return newOrderId; // Flutterwave component expects this
+    } catch (err: any) {
+      // Error already set by createOrder
       setCheckoutLoading(false);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Error creating order. Please try again.";
-      setError(errorMessage);
-      showNotification(errorMessage, "error");
       return null;
     }
   };
@@ -242,19 +283,16 @@ export default function Cart() {
   const handleFlutterwaveSuccess = async (response: any) => {
     try {
       setError(null);
-      console.log("Processing successful payment:", response);
-
       if (!orderId) {
-        throw new Error("No order ID found");
+        throw new Error("Order ID missing for payment update.");
       }
 
-      // Update order with payment details
       const { data: updatedOrder, error: updateError } = await supabase
         .from("orders")
         .update({
           payment_ref:
             response.transaction_id || response.tx_ref || response.flw_ref,
-          status: "completed",
+          status: "completed", // Or 'processing', depending on your workflow
         })
         .eq("id", orderId)
         .select(
@@ -269,25 +307,19 @@ export default function Cart() {
             quantity,
             price
           )
-        `
+          `
         )
         .single();
 
       if (updateError) {
-        console.error("Error updating order:", updateError);
+        console.error("Error updating order after payment:", updateError);
         throw updateError;
       }
 
-      console.log("Order updated successfully:", updatedOrder);
-
-      // Set current order for receipt
       setCurrentOrder(updatedOrder);
       setShowReceipt(true);
 
-      // Generate WhatsApp message
       const whatsappMessage = generateWhatsAppMessage(updatedOrder, items);
-
-      // Open WhatsApp with pre-filled message
       window.open(
         `https://wa.me/2347060438205?text=${encodeURIComponent(
           whatsappMessage
@@ -295,33 +327,32 @@ export default function Cart() {
         "_blank"
       );
 
-      // Clear the cart after successful payment
       await clearCart();
-
-      // Show success notification
       showNotification(
         "Order placed successfully! You can now download your receipt.",
         "success"
       );
-    } catch (error) {
-      console.error("Error processing order after payment:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Payment processing failed";
-      setError(errorMessage);
+    } catch (error: any) {
+      console.error(
+        "Error processing order after successful payment callback:",
+        error
+      );
+      setError(
+        "Payment was successful, but there was an error processing your order. Please contact support."
+      );
       showNotification(
         "Payment was successful, but there was an error processing your order. Please contact support.",
         "error"
       );
     } finally {
       setCheckoutLoading(false);
-      setOrderId(null);
+      setOrderId(null); // Clear orderId to prevent re-deletion on subsequent closes
     }
   };
 
-  const handleFlutterwaveClose = () => {
+  const handleFlutterwaveClose = useCallback(() => {
     setCheckoutLoading(false);
-
-    // If payment was cancelled, delete the pending order
+    // If payment was cancelled, delete the pending order created by handleFlutterwaveInit
     if (orderId) {
       supabase
         .from("orders")
@@ -330,16 +361,16 @@ export default function Cart() {
         .then(
           () => {
             setOrderId(null);
-            console.log("Pending order deleted");
+            console.log("Pending order deleted due to payment close.");
           },
           (error: any) => {
-            console.error("Error deleting pending order:", error);
+            console.error("Error deleting pending order:", error.message);
           }
         );
     }
-  };
+  }, [orderId]); // Dependency on orderId to ensure it's up-to-date
 
-  const generateWhatsAppMessage = (order: any, items: any[]) => {
+  const generateWhatsAppMessage = (order: any, currentCartItems: any[]) => {
     const formattedTotal = formatPrice(order.total);
     const formattedPaymentAmount = formatPrice(paymentAmount);
     const formattedDeliveryFee = formatPrice(deliveryFee);
@@ -351,10 +382,14 @@ export default function Cart() {
     message += `Address: ${order.delivery_address}\n\n`;
 
     message += `*Order Items:*\n`;
-    items.forEach((item) => {
-      const subtotal = formatPrice(item.quantity * item.product.price);
-
-      message += `• ${item.product.name} (×${item.quantity}) - ${subtotal}\n`;
+    // Use currentCartItems (from CartStore) for detailed product info
+    currentCartItems.forEach((item) => {
+      const itemSubtotal = formatPrice(item.quantity * item.product.price);
+      let itemDetails = `• ${item.product.name} (×${item.quantity}) - ${itemSubtotal}`;
+      if (item.selected_color)
+        itemDetails += ` (Color: ${item.selected_color})`;
+      if (item.selected_size) itemDetails += ` (Size: ${item.selected_size})`;
+      message += `${itemDetails}\n`;
     });
 
     message += `\n*Payment Details:*\n`;
@@ -378,8 +413,8 @@ export default function Cart() {
       message += `*Amount to Collect on Delivery:* ${formattedDeliveryFee}\n`;
     }
 
-    message += `*Payment Method:* ${order.payment_method}\n`;
-    message += `*Payment Reference:* ${order.payment_ref}\n\n`;
+    message += `*Payment Method:* Online Payment (Flutterwave)\n`; // Fixed payment method for clarity
+    message += `*Payment Reference:* ${order.payment_ref || "N/A"}\n\n`;
     message += `Please process my order. Thank you!`;
 
     return message;
@@ -394,6 +429,7 @@ export default function Cart() {
     );
   };
 
+  // Only "success" and "error" are allowed for type
   const showNotification = (message: string, type: "success" | "error") => {
     const notification = document.createElement("div");
     notification.className = `fixed bottom-4 right-4 ${
@@ -410,7 +446,7 @@ export default function Cart() {
     }, 3000);
   };
 
-  if (loading) {
+  if (cartLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader className="h-8 w-8 animate-spin text-primary-orange" />
@@ -439,6 +475,14 @@ export default function Cart() {
       </div>
     );
   }
+
+  // Determine if checkout buttons should be disabled
+  const isCheckoutDisabled =
+    !selectedAddressId ||
+    checkoutLoading ||
+    !canCheckout ||
+    userAddresses.length === 0 ||
+    paymentAmount <= 0; // Disable if amount to pay is 0 (e.g., all free delivery and partial payment)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -521,7 +565,7 @@ export default function Cart() {
                                 )
                               }
                               className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
-                              disabled={loading || item.quantity <= 1}
+                              disabled={cartLoading || item.quantity <= 1}
                             >
                               <Minus className="w-4 h-4" />
                             </button>
@@ -536,7 +580,7 @@ export default function Cart() {
                                 )
                               }
                               className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
-                              disabled={loading}
+                              disabled={cartLoading}
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -544,7 +588,7 @@ export default function Cart() {
                           <button
                             onClick={() => handleRemoveItem(item.product_id)}
                             className="text-red-500 hover:text-red-600 disabled:opacity-50"
-                            disabled={loading}
+                            disabled={cartLoading}
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -703,105 +747,76 @@ export default function Cart() {
                 )}
               </div>
 
-              {/* Contact Information */}
+              {/* Delivery Address Selection */}
               <div>
                 <h3 className="text-md font-semibold text-gray-900 mb-3">
-                  Delivery Information
+                  Select Delivery Address
                 </h3>
-                <div className="space-y-3 mb-4">
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
-                      value={deliveryDetails.name}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          name: e.target.value,
-                        })
-                      }
-                      placeholder="Enter your full name"
-                    />
+                {userAddresses.length > 0 ? (
+                  <div className="space-y-3 mb-4">
+                    <div>
+                      <label
+                        htmlFor="deliveryAddress"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Choose an address *
+                      </label>
+                      <select
+                        id="deliveryAddress"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
+                        value={selectedAddressId || ""}
+                        onChange={(e) => setSelectedAddressId(e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Select an address
+                        </option>
+                        {userAddresses.map((address) => (
+                          <option key={address.id} value={address.id}>
+                            {address.street_address}, {address.city},{" "}
+                            {address.state_province} ({address.full_name},{" "}
+                            {address.phone_number})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {selectedAddressId && (
+                      <div className="p-3 border border-gray-200 rounded-md bg-gray-50 text-sm text-gray-700">
+                        <p>
+                          <strong>Name:</strong> {deliveryDetails.name}
+                        </p>
+                        <p>
+                          <strong>Phone:</strong> {deliveryDetails.phone}
+                        </p>
+                        <p>
+                          <strong>Address:</strong> {deliveryDetails.address},{" "}
+                          {deliveryDetails.state}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
-                      value={deliveryDetails.phone}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          phone: e.target.value,
-                        })
-                      }
-                      placeholder="Enter your phone number"
-                    />
+                ) : (
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start">
+                    <Info className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium mb-1">No addresses found.</p>
+                      <p>
+                        Please add a delivery address in your{" "}
+                        <button
+                          onClick={() => navigate("/settings")}
+                          className="text-blue-700 underline hover:no-underline"
+                        >
+                          profile settings
+                        </button>{" "}
+                        to proceed with checkout.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label
-                      htmlFor="state"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      State *
-                    </label>
-                    <input
-                      type="text"
-                      id="state"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
-                      value={deliveryDetails.state}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          state: e.target.value,
-                        })
-                      }
-                      placeholder="Enter your state"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="address"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Delivery Address *
-                    </label>
-                    <textarea
-                      id="address"
-                      required
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-orange focus:border-primary-orange"
-                      value={deliveryDetails.address}
-                      onChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          address: e.target.value,
-                        })
-                      }
-                      placeholder="Enter your full delivery address"
-                    />
-                  </div>
-                </div>
+                )}
 
                 <div className="flex flex-col space-y-4">
                   <FlutterwavePayment
-                    amount={paymentAmount} // Pass the calculated payment amount in NGN
+                    amount={paymentAmount}
                     onSuccess={handleFlutterwaveSuccess}
                     onClose={handleFlutterwaveClose}
                     customerInfo={{
@@ -809,15 +824,7 @@ export default function Cart() {
                       email: user?.email || "",
                       phone: deliveryDetails.phone,
                     }}
-                    disabled={
-                      !deliveryDetails.name ||
-                      !deliveryDetails.phone ||
-                      !deliveryDetails.address ||
-                      !deliveryDetails.state ||
-                      checkoutLoading ||
-                      !canCheckout ||
-                      paymentAmount <= 0
-                    }
+                    disabled={isCheckoutDisabled}
                     orderId={orderId ?? undefined}
                     onInit={handleFlutterwaveInit}
                     className="w-full bg-primary-orange text-white py-3 rounded-lg hover:bg-primary-orange/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -831,17 +838,16 @@ export default function Cart() {
                   </FlutterwavePayment>
                   <button
                     onClick={() => {
+                      // Only use allowed types for showNotification
+                      showNotification(
+                        "Mixpay integration is coming soon!",
+                        "success"
+                      );
+                      // In a real app, you might trigger a different flow or show a modal
                       window.location.href =
                         "https://mixpay.me/ulishastore/checkout";
                     }}
-                    disabled={
-                      !deliveryDetails.name ||
-                      !deliveryDetails.phone ||
-                      !deliveryDetails.address ||
-                      !deliveryDetails.state ||
-                      checkoutLoading ||
-                      !canCheckout
-                    }
+                    disabled={isCheckoutDisabled} // Use the same disabled logic
                     className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg
@@ -853,50 +859,20 @@ export default function Cart() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727" />
+                      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"></path>
+                      <path d="M12 16v-4"></path>
+                      <path d="M12 8h.01"></path>
                     </svg>
-                    <span>Pay with Crypto</span>
+                    <span>Pay with Mixpay </span>
                   </button>
-
-                  {!canCheckout && items.length > 0 && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600 text-center flex items-center justify-center">
-                        <Info className="w-4 h-4 mr-2" />
-                        Minimum 2 items required to checkout
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Order Receipt Modal */}
-      {showReceipt && currentOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Order Receipt</h2>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowReceipt(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <OrderReceipt
-                order={currentOrder}
-                transactionRef={currentOrder.payment_ref}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Show receipt modal if needed */}
+      {showReceipt && currentOrder && <OrderReceipt order={currentOrder} />}
     </div>
   );
 }
