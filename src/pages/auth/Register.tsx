@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ShoppingBag, Chrome, Monitor } from 'lucide-react'; // Import Chrome and Monitor icons
 import { useAuthStore } from '../../store/authStore';
 import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter';
+import { supabase } from "../../lib/supabase";
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -43,20 +44,13 @@ export default function Register() {
       setLoading(false);
     }
   };
-
-  // --- New Handlers for Social Sign-up (Placeholder) ---
-  const handleGoogleSignUp = () => {
-    console.log('Initiating Google Sign-up...');
-    // Implement your Google authentication logic for sign-up here
-    // This typically involves redirecting to Google's OAuth flow
+  
+  const handleOAuthSignIn = async (provider: "google" | "azure") => {
+    await supabase.auth.signInWithOAuth({ provider });
   };
 
-  const handleMicrosoftSignUp = () => {
-    console.log('Initiating Microsoft Sign-up...');
-    // Implement your Microsoft authentication logic for sign-up here
-    // This typically involves redirecting to Microsoft's OAuth flow
-  };
-  // --- End New Handlers ---
+  const handleGoogleSignUp = () => handleOAuthSignIn("google");
+  const handleMicrosoftSignUp = () => handleOAuthSignIn("azure");
 
   return (
     <div className="flex flex-col lg:flex-row justify-center m-5">
