@@ -1,42 +1,40 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ShoppingBag, Chrome, Monitor } from 'lucide-react'; // Import Chrome and Monitor icons
-import { useAuthStore } from '../../store/authStore';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, ShoppingBag, Chrome, Monitor } from "lucide-react"; // Import Chrome and Monitor icons
+import { useAuthStore } from "../../store/authStore";
+import { supabase } from "../../lib/supabase";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const signIn = useAuthStore((state) => state.signIn);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signIn(email, password);
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     } catch (err: any) {
-      setError(err.message || 'An error occurred during sign in. Please try again.');
+      setError(
+        err.message || "An error occurred during sign in. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    console.log('Initiating Google Sign-in...');
-    // Implement your Google authentication logic here
-    // e.g., using @react-oauth/google
+  const handleOAuthSignIn = async (provider: "google" | "azure") => {
+    await supabase.auth.signInWithOAuth({ provider });
   };
 
-  const handleMicrosoftSignIn = () => {
-    console.log('Initiating Microsoft Sign-in...');
-    // Implement your Microsoft authentication logic here
-    // e.g., using MSAL
-  };
+  const handleGoogleSignIn = () => handleOAuthSignIn("google");
+  const handleMicrosoftSignIn = () => handleOAuthSignIn("azure");
 
   return (
     <div className="flex flex-col lg:flex-row justify-center m-5">
@@ -157,7 +155,8 @@ export default function Login() {
                   onClick={handleGoogleSignIn}
                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  <Chrome className="h-5 w-5 mr-2" /> {/* Using Chrome for Google */}
+                  <Chrome className="h-5 w-5 mr-2" />{" "}
+                  {/* Using Chrome for Google */}
                   <span>Sign in with Google</span>
                 </button>
               </div>
@@ -166,7 +165,8 @@ export default function Login() {
                   onClick={handleMicrosoftSignIn}
                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  <Monitor className="h-5 w-5 mr-2" /> {/* Using Monitor for Microsoft (generic) */}
+                  <Monitor className="h-5 w-5 mr-2" />{" "}
+                  {/* Using Monitor for Microsoft (generic) */}
                   <span>Sign in with Microsoft</span>
                 </button>
               </div>
