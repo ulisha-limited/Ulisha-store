@@ -28,6 +28,15 @@ import { supabase } from "./lib/supabase";
 import { InstallPWA } from "./components/InstallPWA";
 import { useAnalytics } from "./hooks/useAnalytics";
 import Page404 from "./pages/errors/Page404";
+import AddressManagementPage from "./pages/Addressmanagement";
+import CurrencyPreferencesPage from "./pages/Currencypreference";
+import AccountSecurityPage from "./pages/Accountsecurity";
+import CountryRegionPage from "./pages/CountryRegion";
+import PaymentSettingsPage from "./pages/PaymentSettings";
+import NotificationPreferencesPage from "./pages/Notificationprefrence";
+
+
+
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
@@ -112,10 +121,25 @@ function App() {
               </Route>
 
               <Route element={<Auth isAdmin={true} />}>
-                <Route path="/dashboard/*" element={<AdminLayout />} />
+                <Route path="/dashboard/" element={<AdminLayout />} />
               </Route>
 
               <Route path="*" element={<Page404 />} />
+
+              <Route path="/settings" element={<Settings />} />
+              <Route
+                path="/settings/address-management"
+                element={<AddressManagementPage />}
+              />
+              <Route
+                path="settings/currency-preferences"
+                element={<CurrencyPreferencesPage />}
+              />
+               <Route path="/settings/account-security" element={<AccountSecurityPage />} />
+                <Route path="/settings/country-region" element={<CountryRegionPage />} />
+        <Route path="/settings/payment-settings" element={<PaymentSettingsPage />} />
+        <Route path="/settings/notification-preferences" element={<NotificationPreferencesPage />} />
+
             </Routes>
           </Suspense>
 
