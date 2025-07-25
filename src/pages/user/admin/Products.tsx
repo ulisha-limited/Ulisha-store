@@ -23,6 +23,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import type { Product } from "../../../types";
 import Sidebar from "../../../components/admin/Sidebar";
+import imageCompression from "browser-image-compression";
 
 const ADMIN_EMAILS = ["paulelite606@gmail.com", "obajeufedo2@gmail.com"];
 
@@ -57,6 +58,12 @@ export default function Products() {
   const productImageRef = useRef<HTMLInputElement>(null);
   const additionalImagesRef = useRef<HTMLInputElement>(null);
   const adImageRef = useRef<HTMLInputElement>(null);
+
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1024,
+    useWebWorker: true,
+  };
 
   const [productData, setProductData] = useState({
     name: "",
@@ -129,9 +136,18 @@ export default function Products() {
 
         if (productData.image) {
           const imageName = `${uuidv4()}-${productData.image.name}`;
+          const compressedImage = await imageCompression(
+            productData.image,
+            options
+          );
+          updates.image = compressedImage;
           const { error: uploadError } = await supabase.storage
             .from("product-images")
-            .upload(imageName, productData.image);
+            .upload(imageName, compressedImage, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType: compressedImage.type,
+            });
 
           if (uploadError) throw uploadError;
 
