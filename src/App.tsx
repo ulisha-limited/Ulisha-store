@@ -35,9 +35,6 @@ import CountryRegionPage from "./pages/CountryRegion";
 import PaymentSettingsPage from "./pages/PaymentSettings";
 import NotificationPreferencesPage from "./pages/Notificationprefrence";
 
-
-
-
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
   const setSession = useAuthStore((state) => state.setSession);
@@ -121,7 +118,7 @@ function App() {
               </Route>
 
               <Route element={<Auth isAdmin={true} />}>
-                <Route path="/dashboard/" element={<AdminLayout />} />
+                <Route path="/dashboard/*" element={<AdminLayout />} />
               </Route>
 
               <Route path="*" element={<Page404 />} />
@@ -135,11 +132,22 @@ function App() {
                 path="settings/currency-preferences"
                 element={<CurrencyPreferencesPage />}
               />
-               <Route path="/settings/account-security" element={<AccountSecurityPage />} />
-                <Route path="/settings/country-region" element={<CountryRegionPage />} />
-        <Route path="/settings/payment-settings" element={<PaymentSettingsPage />} />
-        <Route path="/settings/notification-preferences" element={<NotificationPreferencesPage />} />
-
+              <Route
+                path="/settings/account-security"
+                element={<AccountSecurityPage />}
+              />
+              <Route
+                path="/settings/country-region"
+                element={<CountryRegionPage />}
+              />
+              <Route
+                path="/settings/payment-settings"
+                element={<PaymentSettingsPage />}
+              />
+              <Route
+                path="/settings/notification-preferences"
+                element={<NotificationPreferencesPage />}
+              />
             </Routes>
           </Suspense>
 
