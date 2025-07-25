@@ -17,7 +17,6 @@ import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabase";
 
 import { useNavigate } from "react-router-dom";
-import Settingroute from "../../routes/Settingroutes";
 
 export default function Settings() {
   const [loading, setLoading] = useState(false);
