@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
 
-export function InstallPWA() {
+export default function InstallPWA() {
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
