@@ -2,25 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
-  User,
   LogIn,
-  Menu,
-  X,
   Heart,
   Home,
-  Store,
   Search,
-  ChevronDown,
-  MessageCircle,
   LayoutDashboard,
   Settings,
   LogOut,
   Mail,
-  Calendar,
   Camera,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCartStore } from "../store/cartStore";
+import { useCategoryStore } from "../store/categoryStore";
 
 export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,6 +27,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   const location = useLocation();
   const cartItems = useCartStore((state) => state.items);
   const fetchCart = useCartStore((state) => state.fetchCart);
+  const { categories, loading, error, fetchCategories } = useCategoryStore();
 
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(window.scrollY);
@@ -43,6 +38,13 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
+
+  useEffect(() => {
+    if (
+      !["/login", "/register", "/forgot-password"].includes(location.pathname)
+    )
+      fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -114,20 +116,6 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   if (["/login", "/register", "/forgot-password"].includes(location.pathname))
     return null;
-
-  const categories = [
-    { name: "All", path: "/" },
-    { name: "Clothes", path: "/category/Clothes" },
-    { name: "Accessories", path: "/category/Accessories" },
-    { name: "Shoes", path: "/category/Shoes" },
-    { name: "Smart Watches", path: "/category/SmartWatches" },
-    { name: "Electronics", path: "/category/Electronics" },
-    { name: "Perfumes Body Spray", path: "/category/PerfumesBodySpray" },
-    { name: "Phones", path: "/category/Phones" },
-    { name: "Handbags", path: "/category/Handbags" },
-    { name: "Jewelries", path: "/category/Jewelries" },
-    { name: "Gym Wear", path: "/category/GymWear" },
-  ];
 
   return (
     <>
@@ -267,9 +255,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
               className="items-center text-white hover:text-primary-orange transition-colors hidden md:flex mx-1"
             >
               <LogIn className="h-5 w-5 mr-1" />
-              <span className="text-sm font-medium">
-                Sign In
-              </span>
+              <span className="text-sm font-medium">Sign In</span>
             </Link>
           )}
         </div>
@@ -279,16 +265,36 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           className="flex overflow-x-auto whitespace-nowrap px-4 mt-2"
           style={{ scrollbarWidth: "none" }}
         >
+          <Link
+            key="all"
+            to="/"
+            className={`text-white text-sm px-3 py-1 pb-2 font-medium relative ${
+              location.pathname === "/" ? "text-orange-300" : ""
+            }`}
+          >
+            All
+            {location.pathname === "/" && (
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4/5 h-0.5 bg-orange-500 rounded-full"></span>
+            )}
+          </Link>
           {categories.map((category) => (
             <Link
               key={category.name}
-              to={category.path}
+              to={`/category/${category.name
+                .toLowerCase()
+                .replace(/\s+/g, "-")}`}
               className={`text-white text-sm px-3 py-1 pb-2 font-medium relative ${
-                location.pathname === category.path ? "text-orange-300" : "" // Slightly different orange for active link for contrast
+                location.pathname ===
+                `/category/${category.name.toLowerCase().replace(/\s+/g, "-")}`
+                  ? "text-orange-300"
+                  : ""
               }`}
             >
               {category.name}
-              {location.pathname === category.path && (
+              {location.pathname ===
+                `/category/${category.name
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")}` && (
                 <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4/5 h-0.5 bg-orange-500 rounded-full"></span>
               )}
             </Link>
