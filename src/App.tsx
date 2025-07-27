@@ -82,9 +82,9 @@ function App() {
         v7_relativeSplatPath: true,
       }}
     >
-      <div className="min-h-screen ">
+      <div className="min-h-screen flex flex-col">
         <Navbar isLoggedIn={!!user} />
-        <div className="mt-28">
+        <div className="flex-1 pt-[90px]">
           <Suspense
             fallback={
               <div className="min-h-screen flex items-center justify-center">
@@ -150,10 +150,9 @@ function App() {
               />
             </Routes>
           </Suspense>
-
-          <Footer />
-          <InstallPWA />
         </div>
+        <Footer />
+        <InstallPWA />
       </div>
     </Router>
   );
