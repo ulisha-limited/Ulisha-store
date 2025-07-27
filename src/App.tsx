@@ -8,17 +8,16 @@ import {
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import BottomNav from "./components/BottomNav";
-import AdminLayout from "./layouts/AdminLayout";
 import Auth from "./auth/Auth";
 import { useAuthStore } from "./store/authStore";
 import { supabase } from "./lib/supabase";
-import { InstallPWA } from "./components/InstallPWA";
 import { useAnalytics } from "./hooks/useAnalytics";
 
 /*
  * Lazy load pages to optimize initial load time
  * This allows us to split the code and load only what's necessary for the initial render
  */
+const InstallPWA = lazy(() => import("./components/InstallPWA"));
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
@@ -40,6 +39,7 @@ const AccountSecurityPage = lazy(() => import("./pages/Accountsecurity"));
 const CountryRegionPage = lazy(() => import("./pages/CountryRegion"));
 const PaymentSettingsPage = lazy(() => import("./pages/PaymentSettings"));
 const NotificationPreferencesPage = lazy(() => import("./pages/Notificationprefrence"));
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
