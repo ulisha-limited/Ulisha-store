@@ -8,16 +8,11 @@ import {
   User as UserIcon,
   Search,
 } from "lucide-react";
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 
-const getInitials = (name: string | undefined) => {
-  if (!name) return "UN"; 
-  const parts = name.split(" ");
-  if (parts.length > 1) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return parts[0][0].toUpperCase();
+const getInitials = (name: string) => {
+  return name ? name.charAt(0).toUpperCase() : "";
 };
 
 function BottomNav() {
@@ -30,13 +25,15 @@ function BottomNav() {
   useEffect(() => {
     // Function to check user session
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         setIsLoggedIn(true);
         setUser(session.user);
         // Implement logic to check if user is admin (e.g., from user_metadata or a separate 'profiles' table)
         // For demonstration, let's assume an admin role in user_metadata for now
-        setIsAdmin(session.user.user_metadata?.role === 'admin');
+        setIsAdmin(session.user.user_metadata?.role === "admin");
       } else {
         setIsLoggedIn(false);
         setUser(null);
@@ -46,13 +43,11 @@ function BottomNav() {
 
     checkUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-          checkUser();
-        }
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        checkUser();
       }
-    );
+    });
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -84,7 +79,8 @@ function BottomNav() {
               : "text-gray-400"
           } hover:text-primary-orange transition-colors`}
         >
-          <Search className="h-5 w-5 mb-1" /> {/* Using Search icon for categories */}
+          <Search className="h-5 w-5 mb-1" />{" "}
+          {/* Using Search icon for categories */}
           <span>Categories</span>
         </Link>
         <Link
@@ -102,61 +98,69 @@ function BottomNav() {
         {/* User profile / Login */}
         {isLoggedIn ? (
           <>
-          <div className="relative">
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`flex flex-col items-center justify-center text-xs p-2 focus:outline-none ${
-                isProfileOpen ? "text-primary-orange" : "text-gray-400"
-              } hover:text-primary-orange transition-colors`}
-            >
-              <div
-                className="rounded-full bg-primary-orange flex items-center justify-center mb-1"
-                style={{ width: "24px", height: "24px", color: "white", fontSize: "10px" }}
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className={`flex flex-col items-center justify-center text-xs p-2 focus:outline-none ${
+                  isProfileOpen ? "text-primary-orange" : "text-gray-400"
+                } hover:text-primary-orange transition-colors`}
               >
-                {getInitials((user?.user_metadata as { full_name?: string } | undefined)?.full_name)}
-              </div>
-              <span>Profile</span>
-            </button>
-
-            {isProfileOpen && (
-              <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <Link
-                  to="/"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  onClick={() => setIsProfileOpen(false)}
+                <div
+                  className="rounded-full bg-primary-orange flex items-center justify-center mb-1"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    color: "white",
+                    fontSize: "1rem",
+                  }}
                 >
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </Link>
-                {isAdmin && (
+                  {getInitials(
+                    typeof user?.user_metadata?.name === "string"
+                      ? user.user_metadata.name
+                      : ""
+                  )}
+                </div>
+              </button>
+
+              {isProfileOpen && (
+                <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   <Link
-                    to="/dashboard"
+                    to="/"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                     onClick={() => setIsProfileOpen(false)}
                   >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Dashboard</span>
+                    <Home className="h-4 w-4" />
+                    <span>Home</span>
                   </Link>
-                )}
-                <Link
-                  to="/orders"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  onClick={() => setIsProfileOpen(false)}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  <span>My Orders</span>
-                </Link>
-                <Link
-                  to="/settings"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  onClick={() => setIsProfileOpen(false)}
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-              </div>
-            )}
-          </div>
+                  {isAdmin && (
+                    <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Dashboard</span>
+                    </Link>
+                  )}
+                  <Link
+                    to="/orders"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>My Orders</span>
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <Link
