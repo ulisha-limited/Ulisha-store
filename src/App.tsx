@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
+import BottomNav from "./components/BottomNav";
 import AdminLayout from "./layouts/AdminLayout";
 import Auth from "./auth/Auth";
 import { useAuthStore } from "./store/authStore";
@@ -158,6 +159,7 @@ function App() {
         </div>
         <Footer />
         <InstallPWA />
+        <BottomNav />
       </div>
     </Router>
   );

@@ -5,28 +5,26 @@ import {
   ShoppingCart,
   LayoutDashboard,
   Settings,
-  User,
+  User as UserIcon,
   Search,
 } from "lucide-react";
-import { supabase } from '../lib/supabase'; // Assuming supabase is accessible here as well
+import { supabase } from '../lib/supabase';
+import { User } from "@supabase/supabase-js";
 
-// Helper function to get initials for the profile avatar
-const getInitials = (name) => {
 const getInitials = (name: string | undefined) => {
-  if (!name) return "UN"; // Unknown User
+  if (!name) return "UN"; 
   const parts = name.split(" ");
   if (parts.length > 1) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
   return parts[0][0].toUpperCase();
 };
+
 function BottomNav() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [user, setUser] = useState(null);
-  import type { User } from '@supabase/supabase-js';
-
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -54,7 +52,6 @@ function BottomNav() {
           checkUser();
         }
       }
-    );
     );
 
     return () => {
@@ -104,6 +101,7 @@ function BottomNav() {
 
         {/* User profile / Login */}
         {isLoggedIn ? (
+          <>
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -114,11 +112,12 @@ function BottomNav() {
               <div
                 className="rounded-full bg-primary-orange flex items-center justify-center mb-1"
                 style={{ width: "24px", height: "24px", color: "white", fontSize: "10px" }}
+              >
                 {getInitials((user?.user_metadata as { full_name?: string } | undefined)?.full_name)}
-                {getInitials(user?.user_metadata?.full_name)}
               </div>
               <span>Profile</span>
             </button>
+
             {isProfileOpen && (
               <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                 <Link
@@ -158,6 +157,7 @@ function BottomNav() {
               </div>
             )}
           </div>
+          </>
         ) : (
           <Link
             to="/login"
@@ -167,7 +167,7 @@ function BottomNav() {
                 : "text-gray-400"
             } hover:text-primary-orange transition-colors`}
           >
-            <User className="h-5 w-5 mb-1" />
+            <UserIcon className="h-5 w-5 mb-1" />
             <span>Login</span>
           </Link>
         )}
