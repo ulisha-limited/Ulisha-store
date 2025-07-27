@@ -187,7 +187,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           {/* Cart */}
           <Link
             to="/cart"
-            className="text-white hover:text-primary-orange transition-colors mx-1"
+            className="text-white hover:text-primary-orange transition-colors hidden md:inline mx-1"
           >
             <ShoppingCart className="h-5 w-5" />
             {cartItemCount > 0 && (
@@ -198,7 +198,7 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           </Link>
           {/* User profile */}
           {isLoggedIn ? (
-            <div className="relative profile-menu">
+            <div className="relative profile-menu hidden md:inline">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="text-white hover:text-primary-orange transition-colors focus:outline-none mx-2"
@@ -264,10 +264,10 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
           ) : (
             <Link
               to="/login"
-              className="flex items-center text-white hover:text-primary-orange transition-colors mx-1"
+              className="items-center text-white hover:text-primary-orange transition-colors hidden md:flex mx-1"
             >
               <LogIn className="h-5 w-5 mr-1" />
-              <span className="text-sm font-medium hidden md:inline">
+              <span className="text-sm font-medium">
                 Sign In
               </span>
             </Link>
@@ -275,7 +275,10 @@ export function Navbar({ isLoggedIn }: { isLoggedIn: boolean }) {
         </div>
 
         {/* Categories (Horizontal Scroll) */}
-        <div className="flex overflow-x-auto whitespace-nowrap px-4 mt-2" style={{ scrollbarWidth: "none" }}>
+        <div
+          className="flex overflow-x-auto whitespace-nowrap px-4 mt-2"
+          style={{ scrollbarWidth: "none" }}
+        >
           {categories.map((category) => (
             <Link
               key={category.name}
