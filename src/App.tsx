@@ -6,6 +6,18 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import Footer from "./components/Footer";
+import AdminLayout from "./layouts/AdminLayout";
+import Auth from "./auth/Auth";
+import { useAuthStore } from "./store/authStore";
+import { supabase } from "./lib/supabase";
+import { InstallPWA } from "./components/InstallPWA";
+import { useAnalytics } from "./hooks/useAnalytics";
+
+/*
+ * Lazy load pages to optimize initial load time
+ * This allows us to split the code and load only what's necessary for the initial render
+ */
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
@@ -20,20 +32,13 @@ const Terms = lazy(() => import("./pages/legal/Terms"));
 const Returns = lazy(() => import("./pages/legal/Returns"));
 const ProductList = lazy(() => import("./pages/categories/ProductList"));
 const Search = lazy(() => import("./pages/Search"));
-import Footer from "./components/Footer";
-import AdminLayout from "./layouts/AdminLayout";
-import Auth from "./auth/Auth";
-import { useAuthStore } from "./store/authStore";
-import { supabase } from "./lib/supabase";
-import { InstallPWA } from "./components/InstallPWA";
-import { useAnalytics } from "./hooks/useAnalytics";
-import Page404 from "./pages/errors/Page404";
-import AddressManagementPage from "./pages/Addressmanagement";
-import CurrencyPreferencesPage from "./pages/Currencypreference";
-import AccountSecurityPage from "./pages/Accountsecurity";
-import CountryRegionPage from "./pages/CountryRegion";
-import PaymentSettingsPage from "./pages/PaymentSettings";
-import NotificationPreferencesPage from "./pages/Notificationprefrence";
+const Page404 = lazy(() => import("./pages/errors/Page404"));
+const AddressManagementPage = lazy(() => import("./pages/Addressmanagement"));
+const CurrencyPreferencesPage = lazy(() => import("./pages/Currencypreference"));
+const AccountSecurityPage = lazy(() => import("./pages/Accountsecurity"));
+const CountryRegionPage = lazy(() => import("./pages/CountryRegion"));
+const PaymentSettingsPage = lazy(() => import("./pages/PaymentSettings"));
+const NotificationPreferencesPage = lazy(() => import("./pages/Notificationprefrence"));
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
