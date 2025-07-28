@@ -84,7 +84,7 @@ function BottomNav() {
           <span>Categories</span>
         </Link>
         <Link
-          to="/orders"
+          to="/cart"
           className={`flex flex-col items-center justify-center text-xs p-2 ${
             location.pathname === "/orders"
               ? "text-primary-orange"
@@ -92,7 +92,7 @@ function BottomNav() {
           } hover:text-primary-orange transition-colors`}
         >
           <ShoppingCart className="h-5 w-5 mb-1" />
-          <span>Orders</span>
+          <span>Cart</span>
         </Link>
 
         {/* User profile / Login */}

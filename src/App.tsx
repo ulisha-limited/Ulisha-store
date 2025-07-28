@@ -158,8 +158,9 @@ function App() {
           </Suspense>
         </div>
         <Footer />
-        <InstallPWA />
+        
         <BottomNav />
+        <InstallPWA />
       </div>
     </Router>
   );
